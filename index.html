@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บันทึกรายจ่ายรายวัน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap');
+        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-md mx-auto">
+        <div class="bg-blue-600 rounded-3xl p-6 text-white shadow-xl mb-6">
+            <p class="opacity-80 text-sm">ยอดรวมที่ใช้ไปวันนี้</p>
+            <h1 id="totalAmount" class="text-4xl font-bold">฿0.00</h1>
+        </div>
+
+        <div class="glass rounded-3xl p-6 shadow-sm mb-6 border border-gray-100">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-500 mb-1">รายการ</label>
+                    <input type="text" id="itemName" placeholder="เช่น ค่าข้าว, ค่าน้ำ" 
+                        class="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-500 mb-1">จำนวนเงิน (บาท)</label>
+                    <input type="number" id="itemAmount" placeholder="0.00" 
+                        class="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="addItem()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                    <i class="fa-solid fa-plus mr-2"></i> เพิ่มรายการ
+                </button>
+            </div>
+        </div>
+
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">ประวัติรายการวันนี้</h3>
+        <div id="itemList" class="space-y-3">
+            </div>
+    </div>
+
+    <script>
+        let total = 0;
+        const itemList = document.getElementById('itemList');
+        const totalAmountDisplay = document.getElementById('totalAmount');
+
+        function addItem() {
+            const name = document.getElementById('itemName').value;
+            const amount = parseFloat(document.getElementById('itemAmount').value);
+
+            if (name === "" || isNaN(amount)) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วนครับ");
+                return;
+            }
+
+            // Update Total
+            total += amount;
+            totalAmountDisplay.innerText = `฿${total.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+            // Create Item Element
+            const div = document.createElement('div');
+            div.className = "flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-50 animate-fade-in";
+            div.innerHTML = `
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <span class="font-medium text-gray-700">${name}</span>
+                </div>
+                <span class="font-bold text-red-500">-฿${amount.toFixed(2)}</span>
+            `;
+
+            itemList.prepend(div);
+
+            // Clear inputs
+            document.getElementById('itemName').value = "";
+            document.getElementById('itemAmount').value = "";
+        }
+    </script>
+</body>
+</html>
