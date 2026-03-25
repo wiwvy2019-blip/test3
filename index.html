@@ -1,619 +1,516 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WSP ละหานทราย - ระบบติดตามความก้าวหน้า</title>
-    
-    <!-- Tailwind CSS (สำหรับจัดหน้าตาและสีสัน) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome (สำหรับไอคอนต่างๆ) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts (ฟอนต์ภาษาไทย Prompt เพื่อความสวยงาม) -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- React & ReactDOM (สำหรับระบบการทำงานของเว็บ) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel (สำหรับแปลงโค้ด React ให้ทำงานบนเบราว์เซอร์ได้โดยตรง) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <style>
-        body { font-family: 'Prompt', sans-serif; }
-        /* ซ่อน Scrollbar สำหรับบางจุดเพื่อให้ดูสะอาดตา */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WSP ละหานทราย – ติดตามความก้าวหน้า</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Sarabun',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+textarea,input{font-family:'Sarabun',sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes savePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.fade-in{animation:fadeIn .35s ease forwards}
+.slide-up{animation:slideUp .4s cubic-bezier(.22,1,.36,1) forwards}
+.save-pulse{animation:savePulse .4s ease}
+.accordion{overflow:hidden;transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+</style>
 </head>
-<body class="bg-slate-100 selection:bg-indigo-300">
+<body>
+<div id="root"></div>
+<script>
+var h = React.createElement;
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useRef = React.useRef;
+var useCallback = React.useCallback;
 
-    <!-- จุดที่ React จะนำแอปมาแสดงผล -->
-    <div id="root"></div>
+var INITIAL_DATA = [
+  { id:1, title:"1. การจัดตั้งทีมงาน (Assemble the WSP team)", tasks:[
+    {id:"1.1",text:"เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบันและถูกต้อง",completed:true,remark:""},
+    {id:"1.2",text:"รายชื่อผู้มีส่วนได้ส่วนเสียสอดคล้องตามความเสี่ยง",completed:true,remark:""},
+    {id:"1.3",text:"สมาชิกหรือรายชื่อผู้ติดต่อมีความเชี่ยวชาญกับความเสี่ยง",completed:false,remark:""},
+    {id:"1.4",text:"ทีมงานประชุมตามแผนที่กำหนดและหลังจากเกิดเหตุ",completed:false,remark:""},
+    {id:"1.5",text:"มีการรายงานผลการประชุม WSP ให้พนักงานทราบ",completed:false,remark:""},
+    {id:"1.6",text:"บันทึกการประชุม ความก้าวหน้าในการดำเนินงาน",completed:false,remark:""},
+  ], remark:""},
+  { id:2, title:"2. การสำรวจวินิจฉัยระบบประปา (Describe the water supply system)", tasks:[
+    {id:"2.1",text:"การอธิบายระบบประปาครบถ้วนถูกต้อง",completed:false,remark:""},
+    {id:"2.2",text:"Process Flow diagram ครบถ้วน เป็นปัจจุบัน ตั้งแต่แหล่งน้ำถึงผู้ใช้น้ำ",completed:false,remark:""},
+    {id:"2.3",text:"การอธิบายอุบัติการณ์หรือความเสี่ยง",completed:false,remark:""},
+    {id:"2.4",text:"การสำรวจความพร้อมใช้งานของระบบประปา",completed:false,remark:""},
+  ], remark:""},
+  { id:3, title:"3. การระบุความเสี่ยง ประเมินและทวนสอบ (Identify hazards & assess risks)", tasks:[
+    {id:"3.1",text:"ระบุอันตรายและเหตุการณ์อันตรายได้ครบถ้วนทั้ง 3 ระบบ",completed:false,remark:""},
+    {id:"3.2",text:"การระบุมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
+    {id:"3.3",text:"การทวนสอบมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
+    {id:"3.4",text:"ประเมินความเสี่ยง โดยพิจารณาร่วมกับมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
+    {id:"3.5",text:"จัดลำดับความสำคัญของความเสี่ยงที่มีนัยสำคัญ",completed:false,remark:""},
+  ], remark:""},
+  { id:4, title:"4. แผนปรับปรุงพัฒนา (Improvement/upgrade plan)", tasks:[
+    {id:"4.1",text:"จัดทำแผนปรับปรุงสำหรับความเสี่ยงที่สำคัญที่ควบคุมไม่ได้",completed:false,remark:""},
+    {id:"4.2",text:"แผนปรับปรุงมีความชัดเจนสอดคล้องกับผลประเมิน",completed:false,remark:""},
+    {id:"4.3",text:"การดำเนินงานตามแผนปรับปรุง",completed:false,remark:""},
+  ], remark:""},
+  { id:5, title:"5. การดำเนินการตามมาตรการควบคุม (Monitoring control measures)", tasks:[
+    {id:"5.1",text:"จัดทำแผนติดตามการปฏิบัติงานครอบคลุมมาตรการแก้ไข",completed:false,remark:""},
+    {id:"5.2",text:"บันทึกติดตามให้เห็นว่าการปฏิบัติงานเป็นไปตามแผน",completed:false,remark:""},
+    {id:"5.3",text:"ตรวจทานประสิทธิภาพแผนการแก้ไข",completed:false,remark:""},
+  ], remark:""},
+  { id:6, title:"6. การบริหารจัดการและแผนสนับสนุน (Management procedures)", tasks:[
+    {id:"6.1",text:"ทบทวนปรับปรุงคู่มือปฏิบัติงานให้เป็นปัจจุบัน",completed:false,remark:""},
+    {id:"6.2",text:"ดำเนินการสอบทาน",completed:false,remark:""},
+    {id:"6.3",text:"แผนการจัดการในภาวะฉุกเฉิน (Emergency response plan)",completed:false,remark:""},
+    {id:"6.4",text:"ปรับปรุงพื้นที่ระบบประปาให้สะอาดเรียบร้อย ปลอดภัย (5ส)",completed:false,remark:""},
+    {id:"6.5",text:"พนักงานได้รับการฝึกอบรม/พัฒนาทักษะด้านระบบประปา",completed:false,remark:""},
+  ], remark:""},
+  { id:7, title:"7. การทบทวนและปรับปรุง WSP (Review of the WSP)", tasks:[
+    {id:"7.1",text:"กำหนดตารางเวลาการทบทวนและแก้ไข WSP เป็นประจำ",completed:false,remark:""},
+    {id:"7.2",text:"ทบทวนและแก้ไข WSP ตามที่กำหนดไว้",completed:false,remark:""},
+  ], remark:""},
+];
 
-    <!-- โค้ดระบบหลัก -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+var MAX_SCORE = 70;
+var STORAGE_KEY = 'wsp_lahansai_v3';
 
-        // ข้อมูลจำลองจาก PDF (ตัวชี้วัด WSP ปี 2568 ระดับ กปภ.สาขา)
-        const initialData = [
-          {
-            id: 1,
-            title: "1. การจัดตั้งทีมงาน (Assemble the WSP team)",
-            icon: "fa-solid fa-users",
-            tasks: [
-              { id: "1.1", text: "เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบันและถูกต้อง", completed: true },
-              { id: "1.2", text: "รายชื่อผู้มีส่วนได้ส่วนเสียสอดคล้องตามความเสี่ยง", completed: true },
-              { id: "1.3", text: "สมาชิกหรือรายชื่อผู้ติดต่อมีความเชี่ยวชาญกับความเสี่ยง", completed: false },
-              { id: "1.4", text: "ทีมงานประชุมตามแผนที่กำหนดและหลังจากเกิดเหตุ", completed: false },
-              { id: "1.5", text: "มีการรายงานผลการประชุม WSP ให้พนักงานทราบ", completed: false },
-              { id: "1.6", text: "บันทึกการประชุม ความก้าวหน้าในการดำเนินงาน", completed: false }
-            ]
-          },
-          {
-            id: 2,
-            title: "2. การสำรวจวินิจฉัยระบบประปา (Describe the water supply system)",
-            icon: "fa-solid fa-droplet",
-            tasks: [
-              { id: "2.1", text: "การอธิบายระบบประปาครบถ้วนถูกต้อง", completed: false },
-              { id: "2.2", text: "Process Flow diagram ครบถ้วน เป็นปัจจุบัน ตั้งแต่แหล่งน้ำถึงผู้ใช้น้ำ", completed: false },
-              { id: "2.3", text: "การอธิบายอุบัติการณ์หรือความเสี่ยง", completed: false },
-              { id: "2.4", text: "การสำรวจความพร้อมใช้งานของระบบประปา", completed: false }
-            ]
-          },
-          {
-            id: 3,
-            title: "3. การระบุความเสี่ยง ประเมินและทวนสอบ (Identify hazards & assess risks)",
-            icon: "fa-solid fa-triangle-exclamation",
-            tasks: [
-              { id: "3.1", text: "ระบุอันตรายและเหตุการณ์อันตรายได้ครบถ้วนทั้ง 3 ระบบ", completed: false },
-              { id: "3.2", text: "การระบุมาตรการควบคุมที่มีอยู่", completed: false },
-              { id: "3.3", text: "การทวนสอบมาตรการควบคุมที่มีอยู่", completed: false },
-              { id: "3.4", text: "ประเมินความเสี่ยง โดยพิจารณาร่วมกับมาตรการควบคุมที่มีอยู่", completed: false },
-              { id: "3.5", text: "จัดลำดับความสำคัญของความเสี่ยงที่มีนัยสำคัญ", completed: false }
-            ]
-          },
-          {
-            id: 4,
-            title: "4. แผนปรับปรุงพัฒนา (Improvement/upgrade plan)",
-            icon: "fa-solid fa-chart-column",
-            tasks: [
-              { id: "4.1", text: "จัดทำแผนปรับปรุงสำหรับความเสี่ยงที่สำคัญที่ควบคุมไม่ได้", completed: false },
-              { id: "4.2", text: "แผนปรับปรุงมีความชัดเจนสอดคล้องกับผลประเมิน", completed: false },
-              { id: "4.3", text: "การดำเนินงานตามแผนปรับปรุง", completed: false }
-            ]
-          },
-          {
-            id: 5,
-            title: "5. การดำเนินการตามมาตรการควบคุม (Monitoring control measures)",
-            icon: "fa-solid fa-chart-line",
-            tasks: [
-              { id: "5.1", text: "จัดทำแผนติดตามการปฏิบัติงานครอบคลุมมาตรการแก้ไข", completed: false },
-              { id: "5.2", text: "บันทึกติดตามให้เห็นว่าการปฏิบัติงานเป็นไปตามแผน", completed: false },
-              { id: "5.3", text: "ตรวจทานประสิทธิภาพแผนการแก้ไข", completed: false }
-            ]
-          },
-          {
-            id: 6,
-            title: "6. การบริหารจัดการและแผนสนับสนุน (Management procedures)",
-            icon: "fa-solid fa-file-lines",
-            tasks: [
-              { id: "6.1", text: "ทบทวนปรับปรุงคู่มือปฏิบัติงานให้เป็นปัจจุบัน", completed: false },
-              { id: "6.2", text: "ดำเนินการสอบทาน", completed: false },
-              { id: "6.3", text: "แผนการจัดการในภาวะฉุกเฉิน (Emergency response plan)", completed: false },
-              { id: "6.4", text: "ปรับปรุงพื้นที่ระบบประปาให้สะอาดเรียบร้อย ปลอดภัย (5ส)", completed: false },
-              { id: "6.5", text: "พนักงานได้รับการฝึกอบรม/พัฒนาทักษะด้านระบบประปา", completed: false }
-            ]
-          },
-          {
-            id: 7,
-            title: "7. การทบทวนและปรับปรุง WSP (Review of the WSP)",
-            icon: "fa-solid fa-arrows-rotate",
-            tasks: [
-              { id: "7.1", text: "กำหนดตารางเวลาการทบทวนและแก้ไข WSP เป็นประจำ", completed: false },
-              { id: "7.2", text: "ทบทวนและแก้ไข WSP ตามที่กำหนดไว้", completed: false }
-            ]
-          }
-        ];
+// ── SVG helper ────────────────────────────────────────────────────────────────
+function svg(size, children, extra) {
+  return h('svg', Object.assign({
+    width:size, height:size, viewBox:"0 0 24 24", fill:"none",
+    stroke:"currentColor", strokeWidth:2,
+    strokeLinecap:"round", strokeLinejoin:"round",
+    style:{flexShrink:0, display:'block'}
+  }, extra||{}), children);
+}
+function path(d, extra) { return h('path', Object.assign({d:d}, extra||{})); }
+function circle(cx,cy,r){ return h('circle',{cx:cx,cy:cy,r:r}); }
 
-        function App() {
-          const [categories, setCategories] = useState(initialData);
-          const [expandedCats, setExpandedCats] = useState([1]);
-          const [toast, setToast] = useState(null);
-          const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+var ICONS = {
+  droplet: function(s){ return svg(s||22, path("M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z")); },
+  users:   function(s){ return svg(s||18, path("M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z")); },
+  alert:   function(s){ return svg(s||18, [path("M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",{key:'p'}), path("M12 9v4",{key:'l'}), path("M12 17h.01",{key:'d'})]); },
+  bar:     function(s){ return svg(s||18, [path("M18 20V10",{key:'a'}),path("M12 20V4",{key:'b'}),path("M6 20v-6",{key:'c'})]); },
+  activity:function(s){ return svg(s||18, path("M22 12h-4l-3 9L9 3l-3 9H2")); },
+  file:    function(s){ return svg(s||18, [path("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",{key:'a'}),path("M14 2v6h6",{key:'b'}),path("M16 13H8",{key:'c'}),path("M16 17H8",{key:'d'}),path("M10 9H8",{key:'e'})]); },
+  refresh: function(s){ return svg(s||18, [path("M23 4v6h-6",{key:'a'}),path("M1 20v-6h6",{key:'b'}),path("M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",{key:'c'})]); },
+  check:   function(s){ return svg(s||15, path("M20 6L9 17l-5-5",{strokeWidth:3})); },
+  checkCi: function(s){ return svg(s||20, [path("M22 11.08V12a10 10 0 1 1-5.93-9.14",{key:'a'}),path("M22 4L12 14.01l-3-3",{key:'b'})]); },
+  circ:    function(s){ return svg(s||20, circle(12,12,10)); },
+  bell:    function(s){ return svg(s||13, [path("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9",{key:'a'}),path("M13.73 21a2 2 0 0 1-3.46 0",{key:'b'})]); },
+  down:    function(s){ return svg(s||18, path("M6 9l6 6 6-6")); },
+  up:      function(s){ return svg(s||18, path("M18 15l-6-6-6 6")); },
+  x:       function(s){ return svg(s||18, [path("M18 6L6 18",{key:'a'}),path("M6 6l12 12",{key:'b'})]); },
+  copy:    function(s){ return svg(s||15, [path("M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2z",{key:'a'}),path("M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",{key:'b'})]); },
+  clip:    function(s){ return svg(s||18, [path("M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",{key:'a'}),path("M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z",{key:'b'})]); },
+  trend:   function(s){ return svg(s||22, [path("M23 6l-9.5 9.5-5-5L1 18",{key:'a'}),path("M17 6h6v6",{key:'b'})]); },
+  target:  function(s){ return svg(s||22, [path("M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z",{key:'a'}),path("M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z",{key:'b'}),path("M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",{key:'c'})]); },
+  sparkle: function(s){ return svg(s||14, [path("M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z",{key:'a'}),path("M5 17l.8 2.2L8 20l-2.2.8L5 23l-.8-2.2L2 20l2.2-.8L5 17z",{key:'b'}),path("M19 2l.6 1.6 1.6.6-1.6.6L19 6.5l-.6-1.7L16.8 4.2l1.6-.6L19 2z",{key:'c'})]); },
+  save:    function(s){ return svg(s||14, [path("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z",{key:'a'}),path("M17 21v-8H7v8",{key:'b'}),path("M7 3v5h8",{key:'c'})]); },
+};
 
-          // คำนวณความคืบหน้า
-          const totalTasks = categories.reduce((sum, cat) => sum + cat.tasks.length, 0);
-          const completedTasks = categories.reduce((sum, cat) => 
-            sum + cat.tasks.filter(t => t.completed).length, 0
-          );
-          const overallProgress = Math.round((completedTasks / totalTasks) * 100) || 0;
-          
-          // คำนวณคะแนนคาดการณ์ (อ้างอิงหมวดกระบวนการ 70 คะแนนเต็ม)
-          const maxScore = 70;
-          const estimatedScore = ((completedTasks / totalTasks) * maxScore).toFixed(1);
+var CAT_ICONS = ['users','users','alert','bar','activity','file','refresh'];
 
-          // Toggle Accordion
-          const toggleCategory = (id) => {
-            setExpandedCats(prev => 
-              prev.includes(id) ? prev.filter(catId => catId !== id) : [...prev, id]
-            );
-          };
+// ── Storage ───────────────────────────────────────────────────────────────────
+function loadState() {
+  try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function saveState(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function mergeWithInitial(saved) {
+  return INITIAL_DATA.map(function(cat) {
+    var sc = saved.find(function(s){ return s.id === cat.id; });
+    if (!sc) return Object.assign({}, cat, {remark:''});
+    return Object.assign({}, cat, {
+      remark: sc.remark || '',
+      tasks: cat.tasks.map(function(task) {
+        var st = sc.tasks.find(function(t){ return t.id === task.id; });
+        return st ? Object.assign({}, task, {completed: st.completed, remark: st.remark||''}) : Object.assign({}, task, {remark:''});
+      })
+    });
+  });
+}
 
-          // Toggle Checkbox
-          const toggleTask = (catId, taskId) => {
-            setCategories(prev => prev.map(cat => {
-              if (cat.id !== catId) return cat;
-              return {
-                ...cat,
-                tasks: cat.tasks.map(task => 
-                  task.id === taskId ? { ...task, completed: !task.completed } : task
-                )
-              };
-            }));
-          };
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  var saved = loadState();
+  var initCats = saved ? mergeWithInitial(saved) : INITIAL_DATA.map(function(c){ return Object.assign({},c,{remark:''}); });
 
-          // จัดการหมายเหตุ
-          const handleCategoryRemarkChange = (catId, text) => {
-            setCategories(prev => prev.map(cat => 
-              cat.id === catId ? { ...cat, remark: text } : cat
-            ));
-          };
+  var catsState = useState(initCats);
+  var cats = catsState[0]; var setCats = catsState[1];
 
-          const handleTaskRemarkChange = (catId, taskId, text) => {
-            setCategories(prev => prev.map(cat => {
-              if (cat.id !== catId) return cat;
-              return {
-                ...cat,
-                tasks: cat.tasks.map(task => 
-                  task.id === taskId ? { ...task, remark: text } : task
-                )
-              };
-            }));
-          };
+  var expandedState = useState([1]);
+  var expanded = expandedState[0]; var setExpanded = expandedState[1];
 
-          // แจ้งเตือน
-          const handleRemind = (taskText) => {
-            setToast({
-              title: 'แจ้งเตือนเร่งรัดงานแล้ว',
-              message: `ระบบได้ส่งข้อความไฮเทคถึงผู้รับผิดชอบหัวข้อ "${taskText}"`,
-              type: 'success'
-            });
-            setTimeout(() => setToast(null), 3500);
-          };
+  var toastState = useState(null);
+  var toast = toastState[0]; var setToast = toastState[1];
 
-          // ฟังก์ชันคัดลอกข้อความ
-          const handleCopy = (text) => {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-              document.execCommand('copy');
-              setToast({
-                title: 'คัดลอกสำเร็จ',
-                message: 'คัดลอกข้อมูลลงคลิปบอร์ดพร้อมใช้งาน',
-                type: 'success'
-              });
-              setTimeout(() => setToast(null), 3000);
-            } catch (err) {
-              console.error('Failed to copy', err);
+  var modalState = useState(false);
+  var modal = modalState[0]; var setModal = modalState[1];
+
+  var saveAnimState = useState(false);
+  var saveAnim = saveAnimState[0]; var setSaveAnim = saveAnimState[1];
+
+  var toastRef = useRef(null);
+
+  useEffect(function() {
+    saveState(cats);
+    setSaveAnim(true);
+    var t = setTimeout(function(){ setSaveAnim(false); }, 1400);
+    return function(){ clearTimeout(t); };
+  }, [cats]);
+
+  var total = cats.reduce(function(s,c){ return s + c.tasks.length; }, 0);
+  var done  = cats.reduce(function(s,c){ return s + c.tasks.filter(function(t){ return t.completed; }).length; }, 0);
+  var pct   = Math.round((done/total)*100) || 0;
+  var score = ((done/total)*MAX_SCORE).toFixed(1);
+
+  function showToast(title, msg) {
+    if (toastRef.current) clearTimeout(toastRef.current);
+    setToast({title:title, msg:msg});
+    toastRef.current = setTimeout(function(){ setToast(null); }, 3200);
+  }
+
+  function toggleCat(id) {
+    setExpanded(function(p){ return p.includes(id) ? p.filter(function(i){ return i!==id; }) : p.concat([id]); });
+  }
+
+  function toggleTask(catId, taskId) {
+    setCats(function(prev) {
+      return prev.map(function(c) {
+        if (c.id !== catId) return c;
+        return Object.assign({}, c, {
+          tasks: c.tasks.map(function(t) {
+            if (t.id !== taskId) return t;
+            var next = !t.completed;
+            if (next) {
+              var short = t.text.length > 45 ? t.text.slice(0,45)+'…' : t.text;
+              setTimeout(function(){ showToast('✅ บันทึกแล้ว', '"'+short+'" เสร็จแล้ว'); }, 30);
             }
-            document.body.removeChild(textArea);
-          };
+            return Object.assign({}, t, {completed: next});
+          })
+        });
+      });
+    });
+  }
 
-          // ดึงรายการงานทั้งหมดเพื่อแสดงในสรุป
-          const allPendingTasks = categories.flatMap(cat => 
-            cat.tasks.filter(t => !t.completed).map(t => ({ ...t, catTitle: cat.title, catId: cat.id }))
-          );
-          const allCompletedTasks = categories.flatMap(cat => 
-            cat.tasks.filter(t => t.completed).map(t => ({ ...t, catTitle: cat.title, catId: cat.id }))
-          );
+  function setCatRemark(id, v) {
+    setCats(function(p){ return p.map(function(c){ return c.id===id ? Object.assign({},c,{remark:v}) : c; }); });
+  }
 
-          return (
-            <div className="min-h-screen text-slate-800 pb-24">
-              
-              {/* Premium Glassmorphism Header */}
-              <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
-                <div className="max-w-3xl mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {/* 3D Logo Icon */}
-                    <div className="relative group">
-                      <div className="absolute inset-0 bg-cyan-400 blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                      <div className="relative bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 p-2 md:p-3 rounded-2xl flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_4px_10px_rgba(59,130,246,0.5)] border border-blue-400/50">
-                        <i className="fa-solid fa-droplet text-white drop-shadow-md text-lg"></i>
-                      </div>
-                    </div>
-                    <div>
-                      <h1 className="text-xl md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-800 to-blue-600 tracking-tight">WSP ละหานทราย</h1>
-                      <p className="text-slate-500 text-xs md:text-sm font-semibold tracking-wide">โครงการจัดการน้ำสะอาด กปภ.สาขาละหานทราย</p>
-                    </div>
-                  </div>
-                </div>
-              </header>
+  function setTaskRemark(cid, tid, v) {
+    setCats(function(p){ return p.map(function(c){
+      if (c.id !== cid) return c;
+      return Object.assign({}, c, {tasks: c.tasks.map(function(t){ return t.id===tid ? Object.assign({},t,{remark:v}) : t; })});
+    }); });
+  }
 
-              {/* Main Content */}
-              <main className="max-w-3xl mx-auto px-4 mt-6">
-                
-                {/* Luxury Dashboard Card */}
-                <section className="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 rounded-3xl p-6 md:p-8 mb-8 shadow-[0_15px_40px_-10px_rgba(49,46,129,0.7)] overflow-hidden border border-indigo-500/30">
-                  {/* Glowing Orbs Background */}
-                  <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-indigo-500/40 blur-[50px] pointer-events-none"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-cyan-500/30 blur-[40px] pointer-events-none"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-end mb-5">
-                      <div>
-                        <h2 className="text-indigo-100 text-sm md:text-base font-medium mb-1 flex items-center gap-2">
-                          <i className="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
-                          ความก้าวหน้าโครงการ
-                        </h2>
-                        <div className="flex items-baseline gap-2 text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
-                          <span className="text-5xl md:text-6xl font-black tracking-tighter">{overallProgress}%</span>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right flex flex-col items-end gap-3">
-                        <span className="inline-flex items-center justify-center bg-white/10 backdrop-blur-md text-cyan-50 text-xs font-bold px-4 py-2 rounded-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
-                          {completedTasks} / {totalTasks} งาน
-                        </span>
-                        
-                        {/* 3D Embossed Summary Button */}
-                        <button 
-                          onClick={() => setIsSummaryOpen(true)}
-                          className="group relative inline-flex items-center justify-center gap-2 bg-gradient-to-b from-indigo-400 to-indigo-600 text-white text-xs md:text-sm font-bold px-5 py-2.5 rounded-xl border border-indigo-400/50 shadow-[0_5px_0_rgb(55,48,163),0_10px_20px_rgba(67,56,202,0.5)] active:shadow-[0_0px_0_rgb(55,48,163),0_0px_0_rgba(67,56,202,0.5)] active:translate-y-[5px] transition-all duration-150"
-                        >
-                          <i className="fa-solid fa-clipboard-list drop-shadow-md group-active:scale-95"></i>
-                          ดูสรุปรายงาน
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Hi-Tech Progress Bar */}
-                    <div className="w-full bg-slate-900/50 rounded-full h-3 md:h-4 mt-2 overflow-hidden border border-white/10 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
-                      <div 
-                        className="h-full rounded-full transition-all duration-1000 ease-out relative bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 shadow-[0_0_15px_rgba(56,189,248,0.7)]"
-                        style={{ width: `${overallProgress}%` }}
-                      >
-                        {/* Glossy reflection on progress bar */}
-                        <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/40 to-transparent rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
+  function doCopy(txt) {
+    var ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast('📋 คัดลอกแล้ว','ข้อความถูกคัดลอกลงคลิปบอร์ดแล้ว'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
 
-                {/* Categories List */}
-                <section className="space-y-5">
-                  {categories.map(cat => {
-                    const catTotal = cat.tasks.length;
-                    const catCompleted = cat.tasks.filter(t => t.completed).length;
-                    const catProgress = Math.round((catCompleted / catTotal) * 100);
-                    const isExpanded = expandedCats.includes(cat.id);
-                    const isAllDone = catCompleted === catTotal;
+  var pending   = cats.reduce(function(a,c){ return a.concat(c.tasks.filter(function(t){ return !t.completed; }).map(function(t){ return Object.assign({},t,{catTitle:c.title}); })); }, []);
+  var completed = cats.reduce(function(a,c){ return a.concat(c.tasks.filter(function(t){ return t.completed; }).map(function(t){ return Object.assign({},t,{catTitle:c.title}); })); }, []);
 
-                    return (
-                      <div 
-                        key={cat.id} 
-                        className={`rounded-3xl transition-all duration-300 overflow-hidden border backdrop-blur-sm ${
-                          isAllDone 
-                            ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200 shadow-[0_8px_20px_-10px_rgba(16,185,129,0.2)]' 
-                            : isExpanded 
-                              ? 'bg-white border-indigo-200 shadow-[0_15px_30px_-10px_rgba(79,70,229,0.15)] ring-1 ring-indigo-100' 
-                              : 'bg-white border-slate-200/80 shadow-sm hover:shadow-md'
-                        }`}
-                      >
-                        
-                        {/* Category Header */}
-                        <div 
-                          className={`p-4 md:p-5 flex items-center justify-between cursor-pointer transition-all duration-300 ${
-                            isExpanded && !isAllDone ? 'bg-gradient-to-r from-indigo-50/50 to-transparent' : ''
-                          }`}
-                          onClick={() => toggleCategory(cat.id)}
-                        >
-                          <div className="flex items-center gap-4 flex-1">
-                            {/* Category Icon */}
-                            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-500 shadow-[inset_0_2px_3px_rgba(255,255,255,0.6)] border ${
-                              isAllDone 
-                                ? 'bg-gradient-to-br from-emerald-400 to-emerald-500 text-white border-emerald-400 shadow-[0_5px_15px_rgba(16,185,129,0.4)]' 
-                                : isExpanded 
-                                  ? 'bg-gradient-to-br from-indigo-500 to-blue-600 text-white border-indigo-400 shadow-[0_5px_15px_rgba(79,70,229,0.4)]' 
-                                  : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 border-white'
-                            }`}>
-                              <i className={`${cat.icon} text-lg`}></i>
-                            </div>
-                            <div className="flex-1 pr-2">
-                              <h3 className={`font-bold text-sm md:text-base leading-tight mb-2 transition-colors ${
-                                isAllDone ? 'text-emerald-800' : isExpanded ? 'text-indigo-900' : 'text-slate-700'
-                              }`}>
-                                {cat.title}
-                              </h3>
-                              
-                              {/* Sub-progress bar */}
-                              <div className="flex items-center gap-3">
-                                <div className="w-full max-w-[150px] bg-slate-200/70 rounded-full h-2 overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
-                                  <div 
-                                    className={`h-full rounded-full transition-all duration-700 relative ${
-                                      isAllDone 
-                                        ? 'bg-gradient-to-r from-emerald-400 to-green-500' 
-                                        : 'bg-gradient-to-r from-cyan-400 to-indigo-500'
-                                    }`}
-                                    style={{ width: `${catProgress}%` }}
-                                  >
-                                     <div className="absolute top-0 left-0 right-0 h-1/2 bg-white/30 rounded-full"></div>
-                                  </div>
-                                </div>
-                                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">{catProgress}%</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm border border-white ${
-                            isExpanded 
-                              ? 'bg-indigo-100 text-indigo-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]' 
-                              : 'bg-slate-50 text-slate-400'
-                          }`}>
-                            <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </div>
-                        </div>
+  // ── Render ─────────────────────────────────────────────────────────────────
+  return h('div', {style:{minHeight:'100vh',background:'#f1f5f9',paddingBottom:80}},
 
-                        {/* Tasks List (Accordion Content) */}
-                        <div className={`transition-all duration-400 ease-in-out origin-top ${isExpanded ? 'opacity-100 max-h-[3000px]' : 'opacity-0 max-h-0 hidden'}`}>
-                          <div className="px-3 pb-4 md:px-5 md:pb-6 pt-1">
-                            
-                            {/* Category Remark */}
-                            {!isAllDone && (
-                              <div className="mb-5 bg-gradient-to-br from-orange-50 to-amber-50/30 border border-orange-200/60 p-4 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,1)]">
-                                <label className="text-xs md:text-sm font-bold text-orange-700 mb-2 flex items-center gap-1.5">
-                                  <i className="fa-solid fa-triangle-exclamation text-orange-500"></i>
-                                  ปัญหา/หมายเหตุ (ภาพรวมหมวดหมู่)
-                                </label>
-                                <textarea 
-                                  className="w-full text-sm p-3.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] placeholder:text-slate-300"
-                                  rows="2"
-                                  placeholder="ระบุสาเหตุที่หมวดหมู่นี้ยังดำเนินการไม่ครบถ้วน..."
-                                  value={cat.remark || ""}
-                                  onChange={(e) => handleCategoryRemarkChange(cat.id, e.target.value)}
-                                />
-                              </div>
-                            )}
+    // HEADER
+    h('header', {style:{position:'sticky',top:0,zIndex:30,background:'rgba(255,255,255,0.88)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(226,232,240,0.8)',boxShadow:'0 4px 24px rgba(0,0,0,0.05)'}},
+      h('div', {style:{maxWidth:720,margin:'0 auto',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}},
+        h('div', {style:{display:'flex',alignItems:'center',gap:12}},
+          h('div', {style:{position:'relative'}},
+            h('div', {style:{position:'absolute',inset:-2,borderRadius:14,background:'rgba(56,189,248,0.4)',filter:'blur(8px)'}}),
+            h('div', {style:{position:'relative',background:'linear-gradient(135deg,#38bdf8,#3b82f6,#6366f1)',padding:'8px 10px',borderRadius:14,color:'white',border:'1px solid rgba(96,165,250,0.5)',boxShadow:'inset 0 2px 4px rgba(255,255,255,0.4),0 4px 12px rgba(59,130,246,0.5)'}},
+              ICONS.droplet(22)
+            )
+          ),
+          h('div', null,
+            h('h1', {style:{fontSize:20,fontWeight:900,letterSpacing:'-0.5px',background:'linear-gradient(135deg,#312e81,#3b82f6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}, 'WSP ละหานทราย'),
+            h('p',  {style:{fontSize:12,color:'#64748b',fontWeight:600}}, 'โครงการจัดการน้ำสะอาด กปภ.สาขาละหานทราย')
+          )
+        ),
+        h('div', {style:{display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:700,padding:'6px 12px',borderRadius:10,background:saveAnim?'#f0fdf4':'#f8fafc',border:'1px solid '+(saveAnim?'#86efac':'#e2e8f0'),color:saveAnim?'#16a34a':'#94a3b8',transition:'all .3s'}},
+          h('span', {className: saveAnim?'save-pulse':'', style:{display:'flex'}}, ICONS.save(14)),
+          saveAnim ? 'บันทึกแล้ว' : 'อัตโนมัติ'
+        )
+      )
+    ),
 
-                            <div className="space-y-3">
-                              {cat.tasks.map(task => (
-                                <div 
-                                  key={task.id} 
-                                  className={`relative p-4 md:p-5 rounded-2xl transition-all duration-300 border ${
-                                    task.completed 
-                                      ? 'border-emerald-200 bg-emerald-50/50 shadow-[inset_0_1px_0_rgba(255,255,255,1)]' 
-                                      : 'border-slate-200 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:border-indigo-200'
-                                  }`}
-                                >
-                                  <div 
-                                    className="flex items-start gap-4 cursor-pointer group"
-                                    onClick={() => toggleTask(cat.id, task.id)}
-                                  >
-                                    {/* 3D Embossed Checkbox */}
-                                    <button className={`mt-0.5 flex-shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                      task.completed 
-                                        ? 'bg-gradient-to-br from-emerald-400 to-green-600 border border-emerald-400 text-white shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_0_15px_rgba(16,185,129,0.5)] scale-100' 
-                                        : 'bg-gradient-to-br from-slate-50 to-slate-200 border border-slate-300 text-transparent shadow-[inset_0_2px_5px_rgba(0,0,0,0.1),0_2px_5px_rgba(0,0,0,0.05)] group-hover:border-indigo-400 scale-95 group-hover:scale-100'
-                                    }`}>
-                                      <i className="fa-solid fa-check text-sm drop-shadow-md"></i>
-                                    </button>
-                                    
-                                    <div className="flex-1 min-w-0">
-                                      <p className={`text-sm md:text-base leading-relaxed transition-colors ${
-                                        task.completed ? 'text-slate-400 line-through' : 'text-slate-800 font-semibold'
-                                      }`}>
-                                        <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black mr-2 align-middle border shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] ${
-                                          task.completed ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-gradient-to-b from-indigo-50 to-indigo-100 text-indigo-700 border-indigo-200'
-                                        }`}>
-                                          {task.id}
-                                        </span>
-                                        {task.text}
-                                      </p>
+    h('main', {style:{maxWidth:720,margin:'0 auto',padding:'24px 16px 0'}},
 
-                                      {/* Task Remark & Actions */}
-                                      {!task.completed && (
-                                        <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3" onClick={e => e.stopPropagation()}>
-                                          
-                                          {/* Remark Input */}
-                                          <div className="flex-1 relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                              <i className="fa-solid fa-file-lines text-slate-400 text-sm"></i>
-                                            </div>
-                                            <input 
-                                              type="text"
-                                              className="block w-full pl-9 pr-4 py-2.5 text-xs md:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none transition-all placeholder:text-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]"
-                                              placeholder="เพิ่มหมายเหตุย่อย..."
-                                              value={task.remark || ""}
-                                              onChange={(e) => handleTaskRemarkChange(cat.id, task.id, e.target.value)}
-                                            />
-                                          </div>
+      // DASHBOARD
+      h('section', {style:{position:'relative',background:'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%)',borderRadius:28,padding:'24px 28px',marginBottom:28,boxShadow:'0 20px 50px -10px rgba(49,46,129,0.7)',overflow:'hidden',border:'1px solid rgba(99,102,241,0.3)'}},
+        h('div', {style:{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(99,102,241,0.35)',filter:'blur(50px)',pointerEvents:'none'}}),
+        h('div', {style:{position:'absolute',bottom:-30,left:-30,width:140,height:140,borderRadius:'50%',background:'rgba(6,182,212,0.25)',filter:'blur(40px)',pointerEvents:'none'}}),
+        h('div', {style:{position:'relative',zIndex:1}},
+          h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:16}},
+            h('div', null,
+              h('p', {style:{color:'#a5b4fc',fontSize:13,fontWeight:600,marginBottom:6,display:'flex',alignItems:'center',gap:6}}, [ICONS.sparkle(14), ' ความก้าวหน้าโครงการ']),
+              h('span', {style:{fontSize:60,fontWeight:900,color:'white',letterSpacing:'-3px',lineHeight:1,textShadow:'0 2px 20px rgba(255,255,255,0.2)'}}, pct+'%')
+            ),
+            h('div', {style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}},
+              h('span', {style:{background:'rgba(255,255,255,0.1)',backdropFilter:'blur(10px)',color:'#e0e7ff',fontSize:12,fontWeight:700,padding:'6px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)'}}, done+' / '+total+' งาน'),
+              h('button', {
+                onClick: function(){ setModal(true); },
+                style:{display:'flex',alignItems:'center',gap:7,background:'linear-gradient(to bottom,#818cf8,#6366f1)',color:'white',fontSize:13,fontWeight:700,padding:'9px 18px',borderRadius:12,border:'none',cursor:'pointer',boxShadow:'0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)',transition:'all .12s',outline:'none'},
+                onMouseDown: function(e){e.currentTarget.style.boxShadow='0 0 0 #4338ca';e.currentTarget.style.transform='translateY(5px)';},
+                onMouseUp:   function(e){e.currentTarget.style.boxShadow='0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)';e.currentTarget.style.transform='translateY(0)';},
+                onMouseLeave:function(e){e.currentTarget.style.boxShadow='0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)';e.currentTarget.style.transform='translateY(0)';}
+              }, [ICONS.clip(16), ' ดูสรุปรายงาน'])
+            )
+          ),
+          h('div', {style:{width:'100%',height:14,borderRadius:99,background:'rgba(15,23,42,0.6)',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.5)',overflow:'hidden'}},
+            h('div', {style:{height:'100%',borderRadius:99,background:'linear-gradient(90deg,#22d3ee,#3b82f6,#8b5cf6)',boxShadow:'0 0 20px rgba(56,189,248,0.7)',width:pct+'%',position:'relative',transition:'width .9s cubic-bezier(.22,1,.36,1)'}},
+              h('div', {style:{position:'absolute',top:0,left:0,right:0,height:'50%',background:'linear-gradient(to bottom,rgba(255,255,255,0.4),transparent)',borderRadius:99}})
+            )
+          ),
+          h('div', {style:{marginTop:14}},
+            h('div', {style:{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.07)',borderRadius:10,padding:'6px 14px',border:'1px solid rgba(255,255,255,0.1)',color:'white'}},
+              ICONS.target(16),
+              h('span', {style:{color:'#c7d2fe',fontSize:12,fontWeight:700}}, 'คะแนนคาดการณ์ : '),
+              h('span', {style:{color:'#818cf8',fontSize:16,fontWeight:900}}, score),
+              h('span', {style:{color:'#6b7280',fontSize:11}}, ' / '+MAX_SCORE)
+            )
+          )
+        )
+      ),
 
-                                          {/* 3D Embossed Remind Button */}
-                                          <button 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleRemind(task.text);
-                                            }}
-                                            className="group relative inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-gradient-to-b from-amber-400 to-orange-500 text-white border border-amber-300/50 rounded-xl text-xs md:text-sm font-bold transition-all shrink-0 shadow-[0_4px_0_rgb(194,65,12),0_8px_15px_rgba(245,158,11,0.4)] active:shadow-[0_0px_0_rgb(194,65,12),0_0px_0_rgba(245,158,11,0.4)] active:translate-y-[4px]"
-                                          >
-                                            <i className="fa-solid fa-bell drop-shadow-sm group-active:scale-95"></i>
-                                            <span>เร่งรัดงาน</span>
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+      // CATEGORIES
+      h('section', {style:{display:'flex',flexDirection:'column',gap:16}},
+        cats.map(function(cat, idx) {
+          var catDone = cat.tasks.filter(function(t){ return t.completed; }).length;
+          var catPct  = Math.round((catDone/cat.tasks.length)*100);
+          var isExp   = expanded.includes(cat.id);
+          var allDone = catDone === cat.tasks.length;
+          var iconKey = CAT_ICONS[idx] || 'activity';
+          var CatIcon = ICONS[iconKey];
+
+          return h('div', {key:cat.id, className:'fade-in', style:{
+            borderRadius:24, overflow:'hidden',
+            border: allDone?'1px solid #a7f3d0':isExp?'1px solid #c7d2fe':'1px solid #e2e8f0',
+            background: allDone?'linear-gradient(to right,#f0fdf4,white)':'white',
+            boxShadow: allDone?'0 8px 24px -8px rgba(16,185,129,0.2)':isExp?'0 12px 30px -10px rgba(79,70,229,0.15)':'0 2px 8px rgba(0,0,0,0.04)',
+            transition:'all .3s'
+          }},
+            // category header
+            h('div', {onClick:function(){ toggleCat(cat.id); }, style:{padding:'16px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none',background:isExp&&!allDone?'linear-gradient(to right,rgba(238,242,255,0.7),transparent)':'transparent',transition:'background .3s'}},
+              h('div', {style:{display:'flex',alignItems:'center',gap:14,flex:1}},
+                h('div', {style:{padding:'10px 12px',borderRadius:16,transition:'all .4s',boxShadow:'inset 0 2px 3px rgba(255,255,255,0.6)',border:allDone?'1px solid #6ee7b7':isExp?'1px solid #818cf8':'1px solid white',background:allDone?'linear-gradient(135deg,#34d399,#10b981)':isExp?'linear-gradient(135deg,#6366f1,#3b82f6)':'linear-gradient(135deg,#f1f5f9,#e2e8f0)',color:allDone||isExp?'white':'#94a3b8'}},
+                  CatIcon(18)
+                ),
+                h('div', {style:{flex:1,paddingRight:8}},
+                  h('h3', {style:{fontWeight:700,fontSize:14,lineHeight:1.4,marginBottom:8,color:allDone?'#065f46':isExp?'#312e81':'#334155'}}, cat.title),
+                  h('div', {style:{display:'flex',alignItems:'center',gap:10}},
+                    h('div', {style:{width:130,height:7,borderRadius:99,background:'rgba(148,163,184,0.2)',overflow:'hidden',boxShadow:'inset 0 1px 2px rgba(0,0,0,0.08)'}},
+                      h('div', {style:{height:'100%',borderRadius:99,background:allDone?'linear-gradient(to right,#34d399,#10b981)':'linear-gradient(to right,#22d3ee,#6366f1)',width:catPct+'%',transition:'width .7s cubic-bezier(.22,1,.36,1)',position:'relative'}},
+                        h('div', {style:{position:'absolute',top:0,left:0,right:0,height:'50%',background:'rgba(255,255,255,0.3)',borderRadius:99}})
+                      )
+                    ),
+                    h('span', {style:{fontSize:11,fontWeight:700,color:'#64748b',background:'#f1f5f9',padding:'2px 8px',borderRadius:6}}, catDone+'/'+cat.tasks.length),
+                    h('span', {style:{fontSize:11,fontWeight:800,color:allDone?'#059669':'#6366f1',background:allDone?'#d1fae5':'#eef2ff',padding:'2px 8px',borderRadius:6}}, catPct+'%')
+                  )
+                )
+              ),
+              h('div', {style:{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:isExp?'#eef2ff':'#f8fafc',color:isExp?'#6366f1':'#94a3b8',border:'1px solid white',transition:'all .25s',flexShrink:0,boxShadow:isExp?'inset 0 2px 4px rgba(0,0,0,0.05)':'none'}},
+                isExp ? ICONS.up(18) : ICONS.down(18)
+              )
+            ),
+
+            // accordion content
+            h('div', {className:'accordion', style:{maxHeight:isExp?4000:0, opacity:isExp?1:0}},
+              h('div', {style:{padding:'4px 16px 20px'}},
+                !allDone && h('div', {style:{marginBottom:16,padding:14,background:'linear-gradient(to br,#fff7ed,rgba(255,251,235,0.3))',border:'1px solid rgba(253,186,116,0.5)',borderRadius:16,boxShadow:'inset 0 1px 0 rgba(255,255,255,1)'}},
+                  h('label', {style:{fontSize:13,fontWeight:700,color:'#c2410c',marginBottom:8,display:'flex',alignItems:'center',gap:6}},
+                    [ICONS.alert(14), ' ปัญหา/หมายเหตุ (ภาพรวมหมวดหมู่)']
+                  ),
+                  h('textarea', {rows:2, value:cat.remark||'',
+                    onChange:function(e){ setCatRemark(cat.id, e.target.value); },
+                    placeholder:'ระบุสาเหตุที่หมวดหมู่นี้ยังดำเนินการไม่ครบถ้วน...',
+                    style:{width:'100%',padding:'10px 14px',fontSize:13,border:'1px solid #fed7aa',borderRadius:12,background:'white',outline:'none',resize:'none',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.02)',color:'#1e293b'},
+                    onFocus:function(e){e.target.style.borderColor='#fb923c';e.target.style.boxShadow='0 0 0 3px rgba(251,146,60,0.15)';},
+                    onBlur: function(e){e.target.style.borderColor='#fed7aa';e.target.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.02)';}
+                  })
+                ),
+                h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
+                  cat.tasks.map(function(task) {
+                    return h('div', {key:task.id, style:{padding:'14px 16px',borderRadius:18,transition:'all .3s',border:task.completed?'1px solid #a7f3d0':'1px solid #e2e8f0',background:task.completed?'rgba(240,253,244,0.7)':'white',boxShadow:task.completed?'inset 0 1px 0 rgba(255,255,255,0.8)':'0 2px 8px rgba(0,0,0,0.02)'}},
+                      h('div', {onClick:function(){ toggleTask(cat.id, task.id); }, style:{display:'flex',alignItems:'flex-start',gap:14,cursor:'pointer'}},
+                        h('button', {style:{flexShrink:0,width:30,height:30,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background:task.completed?'linear-gradient(135deg,#34d399,#10b981)':'linear-gradient(135deg,#f8fafc,#e2e8f0)',border:task.completed?'1px solid #6ee7b7':'1px solid #cbd5e1',boxShadow:task.completed?'inset 0 2px 4px rgba(255,255,255,0.5),0 0 15px rgba(16,185,129,0.4)':'inset 0 2px 5px rgba(0,0,0,0.08)',color:task.completed?'white':'transparent',cursor:'pointer',outline:'none',transition:'all .3s'}},
+                          ICONS.check(15)
+                        ),
+                        h('div', {style:{flex:1}},
+                          h('p', {style:{fontSize:14,lineHeight:1.6,color:task.completed?'#94a3b8':'#1e293b',fontWeight:task.completed?500:700,textDecoration:task.completed?'line-through':'none',transition:'all .2s'}},
+                            [h('span', {key:'badge', style:{display:'inline-block',padding:'1px 7px',borderRadius:6,fontSize:11,fontWeight:900,marginRight:8,verticalAlign:'middle',background:task.completed?'#f1f5f9':'linear-gradient(to bottom,#eef2ff,#e0e7ff)',color:task.completed?'#94a3b8':'#4f46e5',border:task.completed?'1px solid #e2e8f0':'1px solid #c7d2fe',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.5)'}}, task.id),
+                             task.text]
+                          ),
+                          !task.completed && h('div', {onClick:function(e){e.stopPropagation();}, style:{marginTop:12,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}},
+                            h('div', {style:{flex:1,minWidth:150,position:'relative'}},
+                              h('div', {style:{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#94a3b8',pointerEvents:'none',display:'flex'}}, ICONS.file(14)),
+                              h('input', {type:'text', value:task.remark||'',
+                                onChange:function(e){ setTaskRemark(cat.id, task.id, e.target.value); },
+                                placeholder:'เพิ่มหมายเหตุย่อย...',
+                                style:{width:'100%',paddingLeft:36,paddingRight:14,paddingTop:9,paddingBottom:9,fontSize:13,border:'1px solid #e2e8f0',borderRadius:12,background:'#f8fafc',outline:'none',color:'#1e293b',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.02)',transition:'all .2s'},
+                                onFocus:function(e){e.target.style.borderColor='#818cf8';e.target.style.background='white';e.target.style.boxShadow='0 0 0 3px rgba(129,140,248,0.15)';},
+                                onBlur: function(e){e.target.style.borderColor='#e2e8f0';e.target.style.background='#f8fafc';e.target.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.02)';}
+                              })
+                            ),
+                            h('button', {
+                              onClick:function(e){
+                                e.stopPropagation();
+                                var short = task.text.length>40 ? task.text.slice(0,40)+'…' : task.text;
+                                showToast('🔔 แจ้งเตือนแล้ว', 'ส่งเร่งรัดงาน "'+short+'" เรียบร้อย');
+                              },
+                              style:{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',fontSize:12,fontWeight:700,cursor:'pointer',background:'linear-gradient(to bottom,#fbbf24,#f97316)',color:'white',border:'none',borderRadius:12,flexShrink:0,boxShadow:'0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)',transition:'all .12s',outline:'none'},
+                              onMouseDown: function(e){e.currentTarget.style.boxShadow='0 0 0 #c2410c';e.currentTarget.style.transform='translateY(4px)';},
+                              onMouseUp:   function(e){e.currentTarget.style.boxShadow='0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)';e.currentTarget.style.transform='translateY(0)';},
+                              onMouseLeave:function(e){e.currentTarget.style.boxShadow='0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)';e.currentTarget.style.transform='translateY(0)';}
+                            }, [ICONS.bell(13), ' เร่งรัดงาน'])
+                          )
+                        )
+                      )
                     );
-                  })}
-                </section>
-              </main>
-
-              {/* Modern Floating Toast Notification */}
-              {toast && (
-                <div className="fixed bottom-6 left-0 right-0 px-4 z-[70] flex justify-center pointer-events-none transition-all duration-300">
-                  <div className="bg-slate-900/90 backdrop-blur-xl text-white p-4 md:p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-4 max-w-md w-full border border-slate-700/50 pointer-events-auto transform translate-y-0 opacity-100">
-                    <div className="bg-gradient-to-br from-emerald-400 to-green-600 text-white p-3 rounded-xl shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.5)] border border-emerald-400/50 flex items-center justify-center">
-                      <i className="fa-solid fa-circle-check text-xl"></i>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-sm md:text-base text-white truncate">{toast.title}</h4>
-                      <p className="text-slate-300 text-xs md:text-sm mt-1 line-clamp-2 leading-relaxed">{toast.message}</p>
-                    </div>
-                    <button 
-                      onClick={() => setToast(null)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors shrink-0 border border-slate-600/50"
-                    >
-                      <i className="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Premium Summary Modal */}
-              {isSummaryOpen && (
-                <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-slate-900/60 backdrop-blur-md transition-opacity duration-300">
-                  <div className="bg-slate-50 w-full max-w-2xl h-[92vh] md:h-[85vh] rounded-t-3xl md:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden border border-white/20 transform transition-transform">
-                    
-                    {/* Modal Header */}
-                    <div className="bg-white/90 backdrop-blur-xl border-b border-slate-200/80 px-5 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 w-10 h-10 flex items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(99,102,241,0.4)] border border-indigo-400">
-                          <i className="fa-solid fa-clipboard-list drop-shadow-md"></i>
-                        </div>
-                        <div>
-                          <h3 className="font-black text-slate-800 text-lg">สรุปรายงานสถานะ WSP</h3>
-                          <p className="text-xs text-indigo-600 font-bold">แยกตามรายการที่ทำแล้วและยังไม่ทำ</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setIsSummaryOpen(false)}
-                        className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors shadow-inner"
-                      >
-                        <i className="fa-solid fa-xmark text-lg"></i>
-                      </button>
-                    </div>
-
-                    {/* Modal Content */}
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-                      
-                      {/* Score & Progress Cards */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="relative bg-white p-5 rounded-3xl border border-slate-200 shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex flex-col justify-center items-center text-center overflow-hidden">
-                          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-6xl">
-                            <i className="fa-solid fa-bullseye"></i>
-                          </div>
-                          <div className="bg-indigo-50 w-12 h-12 flex items-center justify-center rounded-2xl mb-3 text-indigo-600">
-                            <i className="fa-solid fa-bullseye text-xl"></i>
-                          </div>
-                          <p className="text-xs text-slate-500 font-bold mb-1">คะแนนคาดการณ์</p>
-                          <p className="text-4xl font-black text-slate-800 tracking-tight">{estimatedScore} <span className="text-base font-bold text-slate-400">/ 70</span></p>
-                        </div>
-                        <div className="relative bg-white p-5 rounded-3xl border border-slate-200 shadow-[0_8px_20px_rgba(0,0,0,0.03)] flex flex-col justify-center items-center text-center overflow-hidden">
-                          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-6xl">
-                            <i className="fa-solid fa-arrow-trend-up"></i>
-                          </div>
-                          <div className="bg-emerald-50 w-12 h-12 flex items-center justify-center rounded-2xl mb-3 text-emerald-600">
-                            <i className="fa-solid fa-arrow-trend-up text-xl"></i>
-                          </div>
-                          <p className="text-xs text-slate-500 font-bold mb-1">ความก้าวหน้าปัจจุบัน</p>
-                          <p className="text-4xl font-black text-emerald-600 tracking-tight">{overallProgress}%</p>
-                        </div>
-                      </div>
-
-                      {/* Pending Tasks Section */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-4 px-1">
-                          <div className="w-2.5 h-7 bg-gradient-to-b from-orange-400 to-red-500 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
-                          <h4 className="font-black text-slate-800 text-lg">งานที่ยังไม่ดำเนินการ <span className="text-orange-600 bg-orange-100 px-2 py-0.5 rounded-lg text-sm ml-1">{allPendingTasks.length}</span></h4>
-                        </div>
-                        <div className="space-y-3">
-                          {allPendingTasks.length === 0 ? (
-                            <div className="bg-white p-8 rounded-3xl border border-slate-200 text-center flex flex-col items-center justify-center">
-                              <div className="bg-emerald-100 w-16 h-16 flex items-center justify-center rounded-full text-emerald-500 mb-3">
-                                <i className="fa-solid fa-wand-magic-sparkles text-2xl"></i>
-                              </div>
-                              <p className="text-slate-800 font-bold text-lg">ไม่มีงานค้าง</p>
-                              <p className="text-slate-500 text-sm">ยอดเยี่ยมมาก! ดำเนินการครบทุกหัวข้อแล้ว</p>
-                            </div>
-                          ) : (
-                            allPendingTasks.map(task => (
-                              <div key={task.id} className="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex items-start gap-3.5 group hover:border-indigo-300 transition-all">
-                                <i className="fa-regular fa-circle text-slate-300 mt-1 text-xl shrink-0"></i>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-indigo-500 mb-1.5 truncate">{task.catTitle}</p>
-                                  <p className="text-sm md:text-base font-bold text-slate-700 leading-snug">{task.id} {task.text}</p>
-                                  {task.remark && (
-                                    <p className="text-xs md:text-sm text-orange-800 mt-3 bg-gradient-to-r from-orange-50 to-amber-50 p-3 rounded-xl border border-orange-200/60 flex items-start gap-2 shadow-sm">
-                                      <i className="fa-solid fa-triangle-exclamation text-orange-500 mt-0.5 shrink-0"></i> <span className="font-medium">{task.remark}</span>
-                                    </p>
-                                  )}
-                                </div>
-                                <button 
-                                  onClick={() => handleCopy(`[ยังไม่ดำเนินการ] ${task.catTitle}\nงาน: ${task.id} ${task.text}\n${task.remark ? 'ปัญหา/หมายเหตุ: ' + task.remark : ''}`)}
-                                  className="shrink-0 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-indigo-500 rounded-xl transition-all shadow-sm border border-slate-100 active:scale-95"
-                                  title="คัดลอกข้อความ"
-                                >
-                                  <i className="fa-solid fa-copy"></i>
-                                </button>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Completed Tasks Section */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-4 px-1 mt-8">
-                          <div className="w-2.5 h-7 bg-gradient-to-b from-emerald-400 to-green-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
-                          <h4 className="font-black text-slate-800 text-lg">งานที่ดำเนินการแล้ว <span className="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-lg text-sm ml-1">{allCompletedTasks.length}</span></h4>
-                        </div>
-                        <div className="space-y-3">
-                          {allCompletedTasks.length === 0 ? (
-                            <div className="bg-white p-6 rounded-3xl border border-slate-200 text-center text-slate-500 font-medium">ยังไม่มีงานที่ดำเนินการเสร็จ</div>
-                          ) : (
-                            allCompletedTasks.map(task => (
-                              <div key={task.id} className="bg-gradient-to-r from-emerald-50/50 to-white p-4 md:p-5 rounded-2xl border border-emerald-100 flex items-start gap-3.5 shadow-sm">
-                                <i className="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-xl drop-shadow-sm shrink-0"></i>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-bold text-emerald-600 mb-1.5 truncate">{task.catTitle}</p>
-                                  <p className="text-sm md:text-base font-bold text-slate-700 leading-snug">{task.id} {task.text}</p>
-                                </div>
-                                <button 
-                                  onClick={() => handleCopy(`[ดำเนินการแล้ว]\nงาน: ${task.id} ${task.text}`)}
-                                  className="shrink-0 w-10 h-10 flex items-center justify-center text-emerald-400 hover:text-white hover:bg-emerald-500 rounded-xl transition-all shadow-sm border border-emerald-50 active:scale-95"
-                                  title="คัดลอกข้อความ"
-                                >
-                                  <i className="fa-solid fa-copy"></i>
-                                </button>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
+                  })
+                )
+              )
+            )
           );
-        }
+        })
+      )
+    ),
 
-        // สั่งให้ React ทำงานและเรนเดอร์ลงใน <div id="root">
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+    // TOAST
+    toast && h('div', {style:{position:'fixed',bottom:24,left:0,right:0,zIndex:70,display:'flex',justifyContent:'center',padding:'0 16px',pointerEvents:'none'}, className:'slide-up'},
+      h('div', {style:{background:'rgba(15,23,42,0.92)',backdropFilter:'blur(20px)',color:'white',padding:'14px 20px',borderRadius:20,display:'flex',alignItems:'center',gap:14,maxWidth:440,width:'100%',border:'1px solid rgba(100,116,139,0.4)',boxShadow:'0 20px 50px rgba(0,0,0,0.5)',pointerEvents:'auto'}},
+        h('div', {style:{background:'linear-gradient(135deg,#34d399,#10b981)',color:'white',padding:'8px 10px',borderRadius:12,flexShrink:0,boxShadow:'0 0 15px rgba(16,185,129,0.5)'}}, ICONS.checkCi(20)),
+        h('div', {style:{flex:1,minWidth:0}},
+          h('p', {style:{fontWeight:800,fontSize:14}}, toast.title),
+          h('p', {style:{color:'#94a3b8',fontSize:12,marginTop:3}}, toast.msg)
+        ),
+        h('button', {onClick:function(){ setToast(null); }, style:{width:30,height:30,borderRadius:'50%',background:'rgba(30,41,59,0.8)',border:'1px solid rgba(100,116,139,0.4)',color:'#94a3b8',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,outline:'none'}},
+          ICONS.x(14)
+        )
+      )
+    ),
+
+    // MODAL
+    modal && h('div', {
+      className:'fade-in',
+      style:{position:'fixed',inset:0,zIndex:60,background:'rgba(15,23,42,0.65)',backdropFilter:'blur(12px)',display:'flex',alignItems:'flex-end',justifyContent:'center'},
+      onClick:function(e){ if(e.target===e.currentTarget) setModal(false); }
+    },
+      h('div', {className:'slide-up', style:{background:'#f8fafc',width:'100%',maxWidth:700,height:'88vh',borderRadius:'24px 24px 0 0',boxShadow:'0 -20px 60px rgba(0,0,0,0.4)',display:'flex',flexDirection:'column',overflow:'hidden',border:'1px solid rgba(255,255,255,0.2)'}},
+        // modal header
+        h('div', {style:{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid #e2e8f0',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}},
+          h('div', {style:{display:'flex',alignItems:'center',gap:14}},
+            h('div', {style:{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'white',padding:'9px 11px',borderRadius:16,boxShadow:'0 4px 10px rgba(99,102,241,0.4)',border:'1px solid #818cf8'}}, ICONS.clip(18)),
+            h('div', null,
+              h('h3', {style:{fontWeight:900,color:'#1e293b',fontSize:17}}, 'สรุปรายงานสถานะ WSP'),
+              h('p',  {style:{fontSize:12,color:'#6366f1',fontWeight:700}}, 'แยกตามรายการที่ทำแล้วและยังไม่ทำ')
+            )
+          ),
+          h('button', {onClick:function(){ setModal(false); }, style:{width:38,height:38,borderRadius:'50%',background:'#f1f5f9',border:'none',color:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',outline:'none'}},
+            ICONS.x(18)
+          )
+        ),
+        // modal body
+        h('div', {style:{flex:1,overflowY:'auto',padding:'20px'}},
+          // score cards
+          h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:24}},
+            h('div', {style:{background:'white',padding:'20px 16px',borderRadius:24,border:'1px solid #e2e8f0',boxShadow:'0 4px 16px rgba(0,0,0,0.03)',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center'}},
+              h('div', {style:{background:'#eef2ff',padding:'10px 12px',borderRadius:16,color:'#6366f1',marginBottom:10}}, ICONS.target(22)),
+              h('p', {style:{fontSize:11,color:'#64748b',fontWeight:700,marginBottom:4}}, 'คะแนนคาดการณ์'),
+              h('p', {style:{fontSize:26,fontWeight:900,color:'#6366f1',letterSpacing:'-1px'}}, score+' / '+MAX_SCORE)
+            ),
+            h('div', {style:{background:'white',padding:'20px 16px',borderRadius:24,border:'1px solid #e2e8f0',boxShadow:'0 4px 16px rgba(0,0,0,0.03)',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center'}},
+              h('div', {style:{background:'#f0fdf4',padding:'10px 12px',borderRadius:16,color:'#16a34a',marginBottom:10}}, ICONS.trend(22)),
+              h('p', {style:{fontSize:11,color:'#64748b',fontWeight:700,marginBottom:4}}, 'ความก้าวหน้า'),
+              h('p', {style:{fontSize:26,fontWeight:900,color:'#16a34a',letterSpacing:'-1px'}}, pct+'%')
+            )
+          ),
+
+          // pending list
+          h('div', {style:{marginBottom:24}},
+            h('div', {style:{display:'flex',alignItems:'center',gap:10,marginBottom:14,paddingLeft:4}},
+              h('div', {style:{width:10,height:28,background:'linear-gradient(to bottom,#fb923c,#ef4444)',borderRadius:99,boxShadow:'0 0 10px rgba(249,115,22,0.5)'}}),
+              h('h4', {style:{fontWeight:900,fontSize:16,color:'#1e293b'}},
+                ['งานที่ยังไม่ดำเนินการ ', h('span', {key:'c', style:{color:'#ea580c',background:'#fff7ed',padding:'2px 10px',borderRadius:8,fontSize:13,marginLeft:4,fontWeight:800}}, pending.length)]
+              )
+            ),
+            h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
+              pending.length === 0
+                ? h('div', {style:{background:'white',padding:'28px 20px',borderRadius:24,border:'1px solid #e2e8f0',textAlign:'center'}},
+                    h('p', {style:{fontWeight:800,color:'#1e293b',fontSize:16}}, 'ไม่มีงานค้าง 🎉'),
+                    h('p', {style:{color:'#64748b',fontSize:13,marginTop:4}}, 'ดำเนินการครบทุกหัวข้อแล้ว')
+                  )
+                : pending.map(function(t) {
+                    return h('div', {key:t.id, style:{background:'white',padding:'14px 16px',borderRadius:18,border:'1px solid #e2e8f0',display:'flex',alignItems:'flex-start',gap:12,boxShadow:'0 2px 10px rgba(0,0,0,0.03)'}},
+                      h('div', {style:{color:'#cbd5e1',marginTop:2,display:'flex'}}, ICONS.circ(20)),
+                      h('div', {style:{flex:1,minWidth:0}},
+                        h('p', {style:{fontSize:11,fontWeight:700,color:'#6366f1',marginBottom:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, t.catTitle),
+                        h('p', {style:{fontSize:13,fontWeight:700,color:'#334155',lineHeight:1.5}}, t.id+' '+t.text),
+                        t.remark && h('div', {style:{marginTop:8,padding:'8px 12px',background:'linear-gradient(to right,#fff7ed,#fffbeb)',borderRadius:10,border:'1px solid rgba(253,186,116,0.5)',display:'flex',gap:7,alignItems:'flex-start'}},
+                          h('div', {style:{display:'flex',color:'#f97316',flexShrink:0,marginTop:1}}, ICONS.alert(14)),
+                          h('span', {style:{fontSize:12,color:'#9a3412',fontWeight:500}}, t.remark)
+                        )
+                      ),
+                      h('button', {
+                        onClick:function(){ doCopy('[ยังไม่ดำเนินการ] '+t.catTitle+'\nงาน: '+t.id+' '+t.text+(t.remark?'\nหมายเหตุ: '+t.remark:'')); },
+                        style:{flexShrink:0,padding:'8px 10px',borderRadius:10,background:'white',border:'1px solid #e2e8f0',color:'#94a3b8',cursor:'pointer',display:'flex',transition:'all .2s',outline:'none'},
+                        onMouseEnter:function(e){e.currentTarget.style.background='#6366f1';e.currentTarget.style.color='white';},
+                        onMouseLeave:function(e){e.currentTarget.style.background='white';e.currentTarget.style.color='#94a3b8';}
+                      }, ICONS.copy(15))
+                    );
+                  })
+            )
+          ),
+
+          // completed list
+          h('div', null,
+            h('div', {style:{display:'flex',alignItems:'center',gap:10,marginBottom:14,paddingLeft:4}},
+              h('div', {style:{width:10,height:28,background:'linear-gradient(to bottom,#34d399,#10b981)',borderRadius:99,boxShadow:'0 0 10px rgba(16,185,129,0.5)'}}),
+              h('h4', {style:{fontWeight:900,fontSize:16,color:'#1e293b'}},
+                ['งานที่ดำเนินการแล้ว ', h('span', {key:'c', style:{color:'#16a34a',background:'#f0fdf4',padding:'2px 10px',borderRadius:8,fontSize:13,marginLeft:4,fontWeight:800}}, completed.length)]
+              )
+            ),
+            h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
+              completed.length === 0
+                ? h('div', {style:{background:'white',padding:'20px',borderRadius:20,border:'1px solid #e2e8f0',textAlign:'center',color:'#94a3b8',fontWeight:600,fontSize:14}}, 'ยังไม่มีงานที่ดำเนินการเสร็จ')
+                : completed.map(function(t) {
+                    return h('div', {key:t.id, style:{background:'linear-gradient(to right,rgba(240,253,244,0.6),white)',padding:'14px 16px',borderRadius:18,border:'1px solid #a7f3d0',display:'flex',alignItems:'flex-start',gap:12}},
+                      h('div', {style:{color:'#10b981',marginTop:2,display:'flex'}}, ICONS.checkCi(20)),
+                      h('div', {style:{flex:1,minWidth:0}},
+                        h('p', {style:{fontSize:11,fontWeight:700,color:'#059669',marginBottom:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, t.catTitle),
+                        h('p', {style:{fontSize:13,fontWeight:700,color:'#334155',lineHeight:1.5}}, t.id+' '+t.text)
+                      ),
+                      h('button', {
+                        onClick:function(){ doCopy('[ดำเนินการแล้ว]\nงาน: '+t.id+' '+t.text); },
+                        style:{flexShrink:0,padding:'8px 10px',borderRadius:10,background:'white',border:'1px solid #d1fae5',color:'#6ee7b7',cursor:'pointer',display:'flex',transition:'all .2s',outline:'none'},
+                        onMouseEnter:function(e){e.currentTarget.style.background='#10b981';e.currentTarget.style.color='white';},
+                        onMouseLeave:function(e){e.currentTarget.style.background='white';e.currentTarget.style.color='#6ee7b7';}
+                      }, ICONS.copy(15))
+                    );
+                  })
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
 </body>
 </html>
