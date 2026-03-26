@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WSP 68 Progress Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0a0f1e;
@@ -17,500 +17,235 @@
             --primary: #3b82f6;
             --primary-glow: rgba(59,130,246,0.3);
             --cyan: #06b6d4;
-            --cyan-glow: rgba(6,182,212,0.25);
             --green: #10b981;
-            --green-glow: rgba(16,185,129,0.25);
             --amber: #f59e0b;
-            --amber-glow: rgba(245,158,11,0.25);
             --red: #ef4444;
             --text: #f1f5f9;
             --text2: #94a3b8;
             --text3: #64748b;
-            --font: 'IBM Plex Sans Thai', 'Sarabun', sans-serif;
+            --font: 'IBM Plex Sans Thai', sans-serif;
             --radius: 16px;
             --radius-sm: 10px;
             --shadow: 0 4px 24px rgba(0,0,0,0.4);
-            --shadow-glow: 0 0 30px rgba(59,130,246,0.15);
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             font-family: var(--font);
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             padding-bottom: 100px;
-            background-image: 
+            background-image:
                 radial-gradient(ellipse at 20% 0%, rgba(59,130,246,0.08) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 100%, rgba(6,182,212,0.06) 0%, transparent 50%);
         }
 
-        /* HEADER */
-        header {
-            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.08));
-            border-bottom: 1px solid var(--border2);
-            padding: 20px 20px 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        .header-inner {
-            max-width: 700px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-icon {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, var(--primary), var(--cyan));
-            border-radius: 12px;
+        /* ── SYNC STATUS BAR ── */
+        #sync-bar {
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 8px;
+            padding: 7px 16px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            transition: background 0.4s;
+        }
+        #sync-bar.connecting { background: rgba(245,158,11,0.15); color: var(--amber); }
+        #sync-bar.online     { background: rgba(16,185,129,0.1);  color: var(--green); }
+        #sync-bar.offline    { background: rgba(239,68,68,0.1);   color: var(--red); }
+        #sync-bar.saving     { background: rgba(59,130,246,0.1);  color: var(--cyan); }
+        .sync-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.5s infinite;
+        }
+        .sync-bar-static .sync-dot { animation: none; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ── HEADER ── */
+        header {
+            background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.08));
+            border-bottom: 1px solid var(--border2);
+            padding: 18px 20px 14px;
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+        .header-inner { max-width: 700px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header-logo { display: flex; align-items: center; gap: 12px; }
+        .header-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--cyan));
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
             font-size: 20px;
             box-shadow: 0 4px 16px var(--primary-glow);
         }
-        .header-title { font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
-        .header-sub { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
-        .header-date {
-            font-size: 0.78rem;
-            color: var(--text3);
-            text-align: right;
-        }
+        .header-title { font-size: 1.15rem; font-weight: 700; }
+        .header-sub { font-size: 0.7rem; color: var(--text2); margin-top: 2px; }
+        .header-date { font-size: 0.75rem; color: var(--text3); text-align: right; }
 
-        /* DASHBOARD */
-        .dashboard { max-width: 700px; margin: 0 auto; padding: 20px 16px 8px; }
-        
+        /* ── DASHBOARD ── */
+        .dashboard { max-width: 700px; margin: 0 auto; padding: 18px 16px 8px; }
         .dash-main-card {
             background: var(--card);
             border: 1px solid var(--border2);
             border-radius: 20px;
-            padding: 22px 24px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
+            padding: 20px 22px;
+            margin-bottom: 14px;
+            position: relative; overflow: hidden;
         }
         .dash-main-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
             background: linear-gradient(90deg, var(--primary), var(--cyan), var(--green));
         }
-        .dash-title { font-size: 0.78rem; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
-        
-        .dash-percent-row {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .dash-percent-big { font-size: 3.2rem; font-weight: 800; line-height: 1; color: var(--text); }
-        .dash-percent-big span { font-size: 1.4rem; color: var(--text2); }
-        .dash-sub-info { text-align: right; }
-        .dash-completed { font-size: 1.5rem; font-weight: 700; color: var(--green); }
-        .dash-total { font-size: 0.8rem; color: var(--text3); margin-top: 2px; }
-
-        /* Progress Bar */
-        .progress-track {
-            width: 100%;
-            height: 10px;
-            background: rgba(255,255,255,0.07);
-            border-radius: 99px;
-            overflow: hidden;
-            position: relative;
-        }
+        .dash-title { font-size: 0.74rem; color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+        .dash-percent-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; }
+        .dash-percent-big { font-size: 3rem; font-weight: 800; line-height: 1; }
+        .dash-percent-big span { font-size: 1.3rem; color: var(--text2); }
+        .dash-completed { font-size: 1.5rem; font-weight: 700; color: var(--green); text-align: right; }
+        .dash-total { font-size: 0.76rem; color: var(--text3); margin-top: 2px; }
+        .progress-track { width:100%; height:10px; background:rgba(255,255,255,0.07); border-radius:99px; overflow:hidden; }
         .progress-fill {
-            height: 100%;
-            border-radius: 99px;
+            height:100%; border-radius:99px;
             background: linear-gradient(90deg, var(--primary), var(--cyan));
             box-shadow: 0 0 12px var(--primary-glow);
             transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
-            position: relative;
             width: 0%;
         }
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 20px; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
-            animation: shimmer 2s infinite;
-        }
-        @keyframes shimmer {
-            0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; }
-        }
 
-        /* Unit mini cards */
-        .unit-mini-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 10px;
-            margin-bottom: 6px;
-        }
+        /* Unit mini grid */
+        .unit-mini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(126px, 1fr)); gap: 10px; margin-bottom: 4px; }
         .unit-mini-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            position: relative;
-            overflow: hidden;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 12px 14px;
+            cursor: pointer; transition: all 0.2s;
         }
         .unit-mini-card:hover { border-color: var(--primary); background: var(--card2); }
-        .unit-mini-card.active-unit {
-            border-color: var(--primary);
-            background: rgba(59,130,246,0.1);
-            box-shadow: 0 0 20px var(--primary-glow);
-        }
-        .unit-mini-label { font-size: 0.72rem; color: var(--text2); margin-bottom: 8px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .unit-mini-percent { font-size: 1.4rem; font-weight: 700; color: var(--text); }
-        .unit-mini-bar {
-            height: 3px;
-            background: rgba(255,255,255,0.07);
-            border-radius: 99px;
-            margin-top: 8px;
-            overflow: hidden;
-        }
-        .unit-mini-bar-fill {
-            height: 100%;
-            border-radius: 99px;
-            background: linear-gradient(90deg, var(--primary), var(--cyan));
-            transition: width 0.6s ease;
-        }
+        .unit-mini-card.active-unit { border-color: var(--primary); background: rgba(59,130,246,0.1); box-shadow: 0 0 20px var(--primary-glow); }
+        .unit-mini-label { font-size: 0.7rem; color: var(--text2); margin-bottom: 8px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .unit-mini-percent { font-size: 1.35rem; font-weight: 700; }
+        .unit-mini-bar { height: 3px; background: rgba(255,255,255,0.07); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+        .unit-mini-bar-fill { height:100%; border-radius:99px; background: linear-gradient(90deg, var(--primary), var(--cyan)); transition: width 0.5s ease; }
 
-        /* TABS */
-        .tabs-wrapper {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 0 16px;
-            margin-bottom: 4px;
-        }
-        .tabs-scroll {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-            scrollbar-width: none;
-        }
-        .tabs-scroll::-webkit-scrollbar { display: none; }
+        /* ── TABS ── */
+        .tabs-wrapper { max-width:700px; margin: 0 auto; padding: 0 16px; margin-bottom: 4px; }
+        .tabs-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+        .tabs-scroll::-webkit-scrollbar { display:none; }
         .tab-pill {
-            padding: 9px 18px;
-            border-radius: 99px;
-            border: 1px solid var(--border2);
-            background: var(--card);
-            color: var(--text2);
-            font-size: 0.82rem;
-            font-weight: 500;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.25s ease;
+            padding: 9px 18px; border-radius: 99px;
+            border: 1px solid var(--border2); background: var(--card);
+            color: var(--text2); font-size: 0.82rem; font-weight: 500;
+            white-space: nowrap; cursor: pointer; transition: all 0.2s;
             font-family: var(--font);
         }
         .tab-pill:hover { border-color: var(--primary); color: var(--text); }
         .tab-pill.active {
             background: linear-gradient(135deg, var(--primary), #2563eb);
-            border-color: transparent;
-            color: white;
-            box-shadow: 0 4px 16px var(--primary-glow);
-            font-weight: 600;
+            border-color: transparent; color: white;
+            box-shadow: 0 4px 16px var(--primary-glow); font-weight: 600;
         }
 
-        /* UNIT HEADER BAR */
-        .unit-header-bar {
-            max-width: 700px;
-            margin: 12px auto 0;
-            padding: 0 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .unit-name-display { font-size: 1rem; font-weight: 700; color: var(--text); }
-        .unit-stat-pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--card);
-            border: 1px solid var(--border2);
-            padding: 5px 12px;
-            border-radius: 99px;
-            font-size: 0.78rem;
-        }
-        .unit-stat-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+        /* Unit bar */
+        .unit-header-bar { max-width:700px; margin: 12px auto 0; padding: 0 16px; display:flex; justify-content:space-between; align-items:center; }
+        .unit-name-display { font-size: 1rem; font-weight: 700; }
+        .unit-stat-pill { display:flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--border2); padding:5px 12px; border-radius:99px; font-size:0.78rem; }
+        .unit-stat-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); }
 
-        /* TASK LIST */
-        .task-list { max-width: 700px; margin: 0 auto; padding: 12px 16px; }
-        
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0 10px;
-        }
-        .section-line { flex: 1; height: 1px; background: var(--border); }
-        .section-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            white-space: nowrap;
-        }
-        .section-count {
-            font-size: 0.72rem;
-            background: rgba(59,130,246,0.15);
-            color: var(--primary);
-            padding: 2px 8px;
-            border-radius: 99px;
-        }
+        /* ── TASKS ── */
+        .task-list { max-width:700px; margin:0 auto; padding:12px 16px; }
+        .section-header { display:flex; align-items:center; gap:10px; margin:20px 0 10px; }
+        .section-line { flex:1; height:1px; background:var(--border); }
+        .section-label { font-size:0.7rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.08em; white-space:nowrap; }
+        .section-count { font-size:0.7rem; background:rgba(59,130,246,0.15); color:var(--primary); padding:2px 8px; border-radius:99px; }
 
-        /* Task Card */
         .task-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            margin-bottom: 10px;
-            overflow: hidden;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 10px;
+            overflow: hidden; transition: border-color 0.3s;
             position: relative;
+            animation: fadeUp 0.3s ease both;
         }
         .task-card::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 3px;
-            background: var(--border2);
-            transition: background 0.3s;
+            content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+            background: var(--border2); transition: background 0.3s;
         }
         .task-card.completed::before { background: linear-gradient(180deg, var(--green), var(--cyan)); }
         .task-card.completed { border-color: rgba(16,185,129,0.2); }
-        .task-card:hover { border-color: var(--border2); }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-        .task-top {
-            padding: 14px 14px 12px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        .task-id-badge {
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: var(--primary);
-            background: rgba(59,130,246,0.12);
-            padding: 2px 7px;
-            border-radius: 6px;
-            white-space: nowrap;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
-        .task-name { font-size: 0.9rem; font-weight: 500; color: var(--text); flex: 1; line-height: 1.4; }
-        .task-name-row { display: flex; align-items: flex-start; }
-        .status-chip {
-            font-size: 0.68rem;
-            padding: 4px 10px;
-            border-radius: 99px;
-            font-weight: 600;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .status-chip.pending { background: rgba(100,116,139,0.15); color: var(--text3); border: 1px solid var(--border); }
-        .status-chip.done { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+        .task-top { padding: 14px 14px 12px 18px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+        .task-id-badge { font-size:0.66rem; font-weight:700; color:var(--primary); background:rgba(59,130,246,0.12); padding:2px 7px; border-radius:6px; white-space:nowrap; margin-right:8px; flex-shrink:0; }
+        .task-name { font-size:0.88rem; font-weight:500; flex:1; line-height:1.4; }
+        .task-name-row { display:flex; align-items:flex-start; }
+        .status-chip { font-size:0.66rem; padding:4px 10px; border-radius:99px; font-weight:600; white-space:nowrap; flex-shrink:0; }
+        .status-chip.pending { background:rgba(100,116,139,0.15); color:var(--text3); border:1px solid var(--border); }
+        .status-chip.done    { background:rgba(16,185,129,0.12);  color:var(--green); border:1px solid rgba(16,185,129,0.2); }
 
-        .task-body {
-            padding: 0 14px 14px 18px;
-        }
-
-        /* Upload Buttons */
-        .upload-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .task-body { padding: 0 14px 14px 18px; }
+        .upload-row { display:flex; gap:8px; margin-bottom:10px; }
         .btn-upload {
-            flex: 1;
-            padding: 9px 12px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border2);
-            background: var(--card2);
-            color: var(--text2);
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            transition: all 0.2s;
-            font-family: var(--font);
+            flex:1; padding:9px 12px; border-radius:var(--radius-sm);
+            border:1px solid var(--border2); background:var(--card2);
+            color:var(--text2); font-size:0.8rem; font-weight:500;
+            cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
+            transition: all 0.2s; font-family:var(--font);
         }
-        .btn-upload:hover { border-color: var(--primary); color: var(--text); background: rgba(59,130,246,0.08); }
-        .btn-upload:active { transform: scale(0.97); }
-        .btn-upload svg { flex-shrink: 0; }
-        input[type="file"] { display: none; }
+        .btn-upload:hover { border-color:var(--primary); color:var(--text); background:rgba(59,130,246,0.08); }
+        .btn-upload:active { transform:scale(0.97); }
+        input[type="file"] { display:none; }
 
-        /* File list */
-        .file-list { display: flex; flex-direction: column; gap: 6px; }
-        .file-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 10px;
-        }
-        .file-icon { font-size: 16px; flex-shrink: 0; }
-        .file-name-text {
-            flex: 1;
-            font-size: 0.8rem;
-            color: var(--cyan);
-            cursor: pointer;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            transition: color 0.2s;
-        }
-        .file-name-text:hover { color: #67e8f9; }
-        .btn-delete {
-            padding: 4px 9px;
-            border: 1px solid rgba(239,68,68,0.2);
-            background: rgba(239,68,68,0.08);
-            color: var(--red);
-            border-radius: 6px;
-            font-size: 0.72rem;
-            cursor: pointer;
-            font-family: var(--font);
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .btn-delete:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.4); }
+        .file-list { display:flex; flex-direction:column; gap:6px; }
+        .file-item { display:flex; align-items:center; gap:10px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; }
+        .file-icon { font-size:15px; flex-shrink:0; }
+        .file-name-text { flex:1; font-size:0.8rem; color:var(--cyan); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:color 0.2s; }
+        .file-name-text:hover { color:#67e8f9; }
+        .btn-delete { padding:4px 9px; border:1px solid rgba(239,68,68,0.2); background:rgba(239,68,68,0.08); color:var(--red); border-radius:6px; font-size:0.7rem; cursor:pointer; font-family:var(--font); transition:all 0.2s; flex-shrink:0; }
+        .btn-delete:hover { background:rgba(239,68,68,0.18); border-color:rgba(239,68,68,0.4); }
 
-        /* FAB */
-        .fab-zone {
-            position: fixed;
-            bottom: 24px;
-            right: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 90;
-        }
-        .fab {
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-        }
-        .fab:hover { transform: translateY(-2px); }
-        .fab:active { transform: scale(0.94); }
-        .fab-line { background: linear-gradient(135deg, #00B900, #00e600); }
+        /* FABs */
+        .fab-zone { position:fixed; bottom:24px; right:18px; display:flex; flex-direction:column; gap:12px; z-index:90; }
+        .fab-wrap { position:relative; display:flex; align-items:center; }
+        .fab { width:50px; height:50px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; transition:transform 0.2s; box-shadow:0 4px 16px rgba(0,0,0,0.5); }
+        .fab:hover { transform:translateY(-2px); }
+        .fab:active { transform:scale(0.94); }
+        .fab-line   { background: linear-gradient(135deg, #00B900, #00e600); }
         .fab-export { background: linear-gradient(135deg, #334155, #475569); }
         .fab-import { background: linear-gradient(135deg, var(--amber), #d97706); }
-        .fab-label {
-            position: absolute;
-            right: 60px;
-            background: var(--card2);
-            border: 1px solid var(--border2);
-            color: var(--text2);
-            font-size: 0.72rem;
-            padding: 4px 9px;
-            border-radius: 6px;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-        .fab-wrap { position: relative; display: flex; align-items: center; }
-        .fab-wrap:hover .fab-label { opacity: 1; }
+        .fab-label { position:absolute; right:60px; background:var(--card2); border:1px solid var(--border2); color:var(--text2); font-size:0.72rem; padding:4px 9px; border-radius:6px; white-space:nowrap; opacity:0; transition:opacity 0.2s; pointer-events:none; }
+        .fab-wrap:hover .fab-label { opacity:1; }
 
-        /* TOAST */
-        #toast {
-            visibility: hidden;
-            background: rgba(15,23,42,0.95);
-            color: var(--text);
-            border: 1px solid var(--border2);
-            padding: 12px 22px;
-            border-radius: 99px;
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999;
-            font-size: 0.88rem;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(16px);
-            white-space: nowrap;
-        }
-        #toast.show { visibility: visible; animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; }
-        @keyframes toastIn { from { opacity:0; bottom:80px; } to { opacity:1; bottom:90px; } }
-        @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+        /* Toast */
+        #toast { visibility:hidden; background:rgba(15,23,42,0.96); color:var(--text); border:1px solid var(--border2); padding:12px 22px; border-radius:99px; position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:999; font-size:0.86rem; box-shadow:var(--shadow); backdrop-filter:blur(16px); white-space:nowrap; }
+        #toast.show { visibility:visible; animation:toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards; }
+        @keyframes toastIn  { from{opacity:0;bottom:80px} to{opacity:1;bottom:90px} }
+        @keyframes toastOut { from{opacity:1} to{opacity:0} }
 
-        /* MODAL */
-        .modal-bg {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(6px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.25s;
-        }
-        .modal-bg.active { opacity: 1; pointer-events: auto; }
-        .modal-box {
-            background: var(--card);
-            border: 1px solid var(--border2);
-            border-radius: 20px;
-            padding: 28px 24px;
-            width: 88%; max-width: 380px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            transform: translateY(16px) scale(0.97);
-            transition: transform 0.25s;
-        }
-        .modal-bg.active .modal-box { transform: translateY(0) scale(1); }
-        .modal-icon { font-size: 2.2rem; margin-bottom: 12px; }
-        .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-        .modal-body { font-size: 0.88rem; color: var(--text2); line-height: 1.6; margin-bottom: 22px; }
-        .modal-btns { display: flex; gap: 10px; }
-        .modal-btns .btn-m {
-            flex: 1;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            font-family: var(--font);
-            transition: all 0.2s;
-        }
-        .btn-m-cancel { background: var(--card2); color: var(--text2); border: 1px solid var(--border2) !important; }
-        .btn-m-cancel:hover { color: var(--text); }
-        .btn-m-confirm { background: linear-gradient(135deg, var(--red), #dc2626); color: white; }
-        .btn-m-ok { background: linear-gradient(135deg, var(--primary), #2563eb); color: white; }
-        .btn-m-ok:hover, .btn-m-confirm:hover { opacity: 0.9; }
+        /* Modal */
+        .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+        .modal-bg.active { opacity:1; pointer-events:auto; }
+        .modal-box { background:var(--card); border:1px solid var(--border2); border-radius:20px; padding:26px 22px; width:88%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.6); transform:translateY(14px) scale(0.97); transition:transform 0.25s; }
+        .modal-bg.active .modal-box { transform:translateY(0) scale(1); }
+        .modal-icon { font-size:2.2rem; margin-bottom:10px; }
+        .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:8px; }
+        .modal-body { font-size:0.86rem; color:var(--text2); line-height:1.6; margin-bottom:20px; }
+        .modal-btns { display:flex; gap:10px; }
+        .btn-m { flex:1; padding:11px; border-radius:var(--radius-sm); font-size:0.86rem; font-weight:600; cursor:pointer; border:none; font-family:var(--font); transition:all 0.2s; }
+        .btn-m-cancel  { background:var(--card2); color:var(--text2); border:1px solid var(--border2) !important; }
+        .btn-m-confirm { background:linear-gradient(135deg, var(--red), #dc2626); color:white; }
+        .btn-m-ok      { background:linear-gradient(135deg, var(--primary), #2563eb); color:white; }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
-
-        /* Animation */
-        .task-card { animation: fadeUp 0.3s ease both; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        ::-webkit-scrollbar { width:5px; height:5px; }
+        ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:99px; }
     </style>
 </head>
 <body>
+
+<!-- ── SYNC BAR ── -->
+<div id="sync-bar" class="connecting">
+    <div class="sync-dot"></div>
+    <span id="sync-text">กำลังเริ่มต้นระบบเชื่อมต่อ Cloud...</span>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -519,24 +254,28 @@
             <div class="header-icon">💧</div>
             <div>
                 <div class="header-title">WSP 68 Tracker</div>
-                <div class="header-sub">ระบบติดตามความคืบหน้าโครงการน้ำสะอาด</div>
+                <div class="header-sub">ระบบติดตามความคืบหน้า · Real-time Sync</div>
             </div>
         </div>
-        <div class="header-date" id="header-date"></div>
+        <div>
+            <div class="header-date" id="header-date"></div>
+            <div style="text-align:right; margin-top:4px;">
+                <span style="font-size:0.68rem; color:var(--green);"><span class="sync-dot" style="display:inline-block; margin-right:4px;"></span> Cloud Active</span>
+            </div>
+        </div>
     </div>
 </header>
 
 <!-- DASHBOARD -->
 <div class="dashboard">
-    <!-- Main Progress Card -->
     <div class="dash-main-card">
         <div class="dash-title">📊 ภาพรวมทุกหน่วยงาน</div>
         <div class="dash-percent-row">
             <div>
                 <div class="dash-percent-big"><span id="overall-pct">0</span><span>%</span></div>
-                <div style="font-size:0.78rem; color:var(--text3); margin-top:4px;">ความคืบหน้าโดยรวม</div>
+                <div style="font-size:0.76rem; color:var(--text3); margin-top:4px;">ความคืบหน้าโดยรวม</div>
             </div>
-            <div class="dash-sub-info">
+            <div style="text-align:right">
                 <div class="dash-completed" id="dash-completed">0</div>
                 <div class="dash-total" id="dash-total">จาก 0 หัวข้อ</div>
             </div>
@@ -545,8 +284,6 @@
             <div class="progress-fill" id="main-progress-fill"></div>
         </div>
     </div>
-
-    <!-- Unit Mini Cards -->
     <div class="unit-mini-grid" id="unit-mini-grid"></div>
 </div>
 
@@ -555,381 +292,400 @@
     <div class="tabs-scroll" id="unit-tabs"></div>
 </div>
 
-<!-- UNIT HEADER -->
 <div class="unit-header-bar">
     <div class="unit-name-display" id="unit-name-display">—</div>
     <div class="unit-stat-pill">
         <div class="unit-stat-dot"></div>
-        <span id="unit-stat-text" style="color:var(--text2);">—</span>
+        <span id="unit-stat-text" style="color:var(--text2)">—</span>
     </div>
 </div>
 
-<!-- TASK LIST -->
 <main class="task-list" id="task-list"></main>
 
 <!-- FABs -->
 <div class="fab-zone">
     <div class="fab-wrap">
-        <span class="fab-label">นำเข้าข้อมูล</span>
-        <button class="fab fab-import" onclick="document.getElementById('import-file').click()" title="Import">📂</button>
+        <span class="fab-label">นำเข้าข้อมูล JSON</span>
+        <button class="fab fab-import" onclick="document.getElementById('import-file').click()">📂</button>
     </div>
     <div class="fab-wrap">
-        <span class="fab-label">สำรองข้อมูล</span>
-        <button class="fab fab-export" onclick="exportData()" title="Export">💾</button>
+        <span class="fab-label">สำรองข้อมูล JSON</span>
+        <button class="fab fab-export" onclick="exportData()">💾</button>
     </div>
     <div class="fab-wrap">
         <span class="fab-label">ส่ง LINE</span>
-        <button class="fab fab-line" onclick="copyToLine()" title="LINE">💬</button>
+        <button class="fab fab-line" onclick="copyToLine()">💬</button>
     </div>
 </div>
 
 <input type="file" id="import-file" accept=".json" onchange="handleImport(event)">
-<div id="toast">บันทึกสำเร็จ!</div>
+<div id="toast"></div>
 
-<!-- MODAL -->
 <div id="modal" class="modal-bg">
     <div class="modal-box">
         <div class="modal-icon" id="modal-icon">⚠️</div>
         <div class="modal-title" id="modal-title">ยืนยัน</div>
-        <div class="modal-body" id="modal-body">คุณแน่ใจหรือไม่?</div>
-        <div class="modal-btns" id="modal-btns">
-            <button class="btn-m btn-m-cancel" onclick="closeModal()">ยกเลิก</button>
-            <button class="btn-m btn-m-confirm" id="modal-confirm">ตกลง</button>
-        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-btns" id="modal-btns"></div>
     </div>
 </div>
 
-<script>
-    const units = [
-        "แม่ข่ายละหานทราย", 
-        "หน่วยปะคำ", 
-        "หน่วยโนนดินแดง", 
-        "หน่วยบ้านกรวด (ห้วยเมฆา)", 
-        "หน่วยผลิตตะโก"
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ─── UNITS & CATEGORIES ───────────────────────────────────────
+    window.units = [
+        "แม่ข่ายละหานทราย","หน่วยปะคำ","หน่วยโนนดินแดง",
+        "หน่วยบ้านกรวด (ห้วยเมฆา)","หน่วยผลิตตะโก"
+    ];
+    window.wspCategories = [
+        { category: "หมวด 1: กระบวนการ WSP", tasks: [
+            { id:"1.1", title:"เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบัน" },
+            { id:"1.2", title:"รายชื่อผู้มีส่วนได้ส่วนเสีย" },
+            { id:"2.2", title:"Process Flow diagram เป็นปัจจุบัน" },
+            { id:"3.1", title:"การระบุอันตรายครบ 3 ระบบ" },
+            { id:"3.4", title:"ประเมินความเสี่ยงและมาตรการควบคุม" },
+            { id:"4.1", title:"แผนปรับปรุงสำหรับความเสี่ยงสำคัญ" },
+            { id:"5.1", title:"แผนติดตามการปฏิบัติงาน (Operational)" },
+            { id:"6.3", title:"แผนการจัดการในภาวะฉุกเฉิน (ERP)" },
+            { id:"6.4", title:"ปรับปรุงพื้นที่ระบบประปา (5ส)" }
+        ]},
+        { category: "หมวด 2: การยืนยันประสิทธิผล", tasks: [
+            { id:"8.1", title:"ผลทดสอบคุณภาพน้ำประปาโดย กปภ.สาขา" },
+            { id:"9.1", title:"ความพึงพอใจด้านคุณภาพและปริมาณน้ำ" }
+        ]}
     ];
 
-    const wspCategories = [
-        {
-            category: "หมวด 1: กระบวนการ WSP",
-            tasks: [
-                { id: "1.1", title: "เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบัน" },
-                { id: "1.2", title: "รายชื่อผู้มีส่วนได้ส่วนเสีย" },
-                { id: "2.2", title: "Process Flow diagram เป็นปัจจุบัน" },
-                { id: "3.1", title: "การระบุอันตรายครบ 3 ระบบ" },
-                { id: "3.4", title: "ประเมินความเสี่ยงและมาตรการควบคุม" },
-                { id: "4.1", title: "แผนปรับปรุงสำหรับความเสี่ยงสำคัญ" },
-                { id: "5.1", title: "แผนติดตามการปฏิบัติงาน (Operational)" },
-                { id: "6.3", title: "แผนการจัดการในภาวะฉุกเฉิน (ERP)" },
-                { id: "6.4", title: "ปรับปรุงพื้นที่ระบบประปา (5ส)" }
-            ]
-        },
-        {
-            category: "หมวด 2: การยืนยันประสิทธิผล",
-            tasks: [
-                { id: "8.1", title: "ผลทดสอบคุณภาพน้ำประปาโดย กปภ.สาขา" },
-                { id: "9.1", title: "ความพึงพอใจด้านคุณภาพและปริมาณน้ำ" }
-            ]
+    window.appData = {};
+    window.currentUnit = units[0];
+    let db, auth;
+    
+    // ตั้งค่าตัวแปรเชื่อมต่อระบบ Cloud
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'wsp-68-shared-app';
+    let firebaseConfig = {};
+
+    // ตรวจสอบว่ามี Configuration แบบฝังมาจากโฮสต์หรือไม่
+    if (typeof __firebase_config !== 'undefined') {
+        firebaseConfig = JSON.parse(__firebase_config);
+    } else {
+        // หากต้องการนำไฟล์ HTML ไปวางที่อื่นด้วยตัวเอง สามารถใส่ API Key ตรงนี้ได้เลย
+        // แต่ถ้าเปิดผ่านลิงก์ของแพลตฟอร์มนี้ โค้ดจะอ่านคีย์ด้านบนอัตโนมัติ
+        firebaseConfig = {
+            /* ใส่ Firebase Config ตรงนี้ (ถ้าต้องการไปโฮสต์เองที่อื่น) */
+        };
+    }
+
+    // ─── INIT FIREBASE CLOUD ───────────────────────────────────────────────────
+    function setSyncStatus(status, text) {
+        const bar = document.getElementById('sync-bar');
+        bar.className = status;
+        document.getElementById('sync-text').innerText = text;
+    }
+
+    try {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        const initAuth = async () => {
+            setSyncStatus('connecting', '⏳ กำลังยืนยันตัวตนเข้าระบบ...');
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        
+        initAuth().then(() => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    setupCloudListener();
+                }
+            });
+        }).catch(err => {
+            console.error(err);
+            setSyncStatus('offline', '🔴 ไม่สามารถเชื่อมต่อระบบ Cloud ได้');
+        });
+
+    } catch (e) {
+        console.error("Firebase Init Error:", e);
+        setSyncStatus('offline', '🔴 ระบบยังไม่ได้รับการคอนฟิก หรือเปิดในแบบออฟไลน์');
+        // Render empty shell for offline
+        units.forEach(u=>{ if(!appData[u]) appData[u]={}; });
+        renderAll();
+    }
+
+    function setupCloudListener() {
+        setSyncStatus('connecting', '⏳ กำลังดึงข้อมูลจาก Cloud...');
+        // เข้าถึงฐานข้อมูลส่วนกลางของโปรเจ็กต์นี้ (ใครเปิดก็จะเห็นข้อมูลเดียวกัน)
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'wsp_data', 'shared_state');
+        
+        onSnapshot(docRef, (snapshot) => {
+            if (snapshot.exists()) {
+                window.appData = snapshot.data().appData || {};
+            } else {
+                window.appData = {};
+            }
+            // ป้องกัน Error หากข้อมูลของหน่วยบางหน่วยยังไม่มีการถูกตั้งค่า
+            units.forEach(u => { if (!window.appData[u]) window.appData[u] = {}; });
+            
+            renderAll();
+            setSyncStatus('online sync-bar-static', '🟢 ซิงค์ข้อมูลอัตโนมัติเรียบร้อย');
+        }, (error) => {
+            console.error(error);
+            setSyncStatus('offline', '🔴 ขาดการเชื่อมต่อกับ Cloud');
+        });
+    }
+
+    window.saveToFirebase = async function() {
+        if (!auth || !auth.currentUser) return;
+        setSyncStatus('saving', '⏫ กำลังบันทึกขึ้น Cloud...');
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'wsp_data', 'shared_state');
+        try {
+            await setDoc(docRef, { appData: window.appData }, { merge: true });
+            setSyncStatus('online sync-bar-static', '🟢 บันทึกสำเร็จ (Real-time Sync)');
+        } catch(e) {
+            console.error(e);
+            setSyncStatus('offline', '🔴 บันทึกล้มเหลว');
+            showModal('warn', 'ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลขึ้นระบบได้');
         }
-    ];
+    };
 
-    let appData = {};
-    let currentUnit = units[0];
-    let modalConfirmCallback = null;
+    // ─── RENDER ───────────────────────────────────────────────────
+    window.renderAll = function() {
+        renderTabs(); renderUnitMiniCards(); renderTasks(); updateDashboard();
+    };
 
-    // ─── Init ───
-    function init() {
-        // Date display
-        const d = new Date();
-        document.getElementById('header-date').innerHTML = 
-            `${d.toLocaleDateString('th-TH', {weekday:'short'})} ${d.toLocaleDateString('th-TH', {day:'numeric',month:'short',year:'numeric'})}`;
+    window.renderTabs = function() {
+        document.getElementById('unit-tabs').innerHTML = units.map(u =>
+            `<button class="tab-pill ${u===currentUnit?'active':''}" onclick="switchUnit('${u.replace(/'/g,"\\'")}')">
+                ${u}
+             </button>`).join('');
+    };
 
-        const saved = localStorage.getItem('pwa_wsp_68_data');
-        if (saved) {
-            try { appData = JSON.parse(saved); } catch(e) {}
-        }
-        units.forEach(u => { if (!appData[u]) appData[u] = {}; });
+    window.switchUnit = function(unit) {
+        window.currentUnit = unit;
+        renderAll();
+        window.scrollTo({top:0, behavior:'smooth'});
+    };
 
-        renderTabs();
-        renderUnitMiniCards();
-        renderTasks();
-        updateDashboard();
-    }
-
-    // ─── Tabs ───
-    function renderTabs() {
-        document.getElementById('unit-tabs').innerHTML = units.map(u => `
-            <button class="tab-pill ${u === currentUnit ? 'active' : ''}" onclick="switchUnit('${u}')">${u}</button>
-        `).join('');
-    }
-
-    function switchUnit(unit) {
-        currentUnit = unit;
-        renderTabs();
-        renderUnitMiniCards();
-        renderTasks();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // ─── Mini Cards ───
-    function renderUnitMiniCards() {
-        const total = wspCategories.reduce((s,c) => s + c.tasks.length, 0);
+    window.renderUnitMiniCards = function() {
+        const total = wspCategories.reduce((s,c)=>s+c.tasks.length, 0);
         document.getElementById('unit-mini-grid').innerHTML = units.map(u => {
             let done = 0;
             wspCategories.forEach(c => c.tasks.forEach(t => {
-                if (appData[u]?.[t.id]?.length > 0) done++;
+                if ((appData[u]||{})[t.id]?.length > 0) done++;
             }));
-            const pct = total === 0 ? 0 : Math.round(done / total * 100);
-            return `
-                <div class="unit-mini-card ${u === currentUnit ? 'active-unit' : ''}" onclick="switchUnit('${u}')">
-                    <div class="unit-mini-label" title="${u}">${u}</div>
-                    <div class="unit-mini-percent">${pct}%</div>
-                    <div class="unit-mini-bar"><div class="unit-mini-bar-fill" style="width:${pct}%"></div></div>
-                </div>`;
+            const pct = total ? Math.round(done/total*100) : 0;
+            return `<div class="unit-mini-card ${u===currentUnit?'active-unit':''}" onclick="switchUnit('${u.replace(/'/g,"\\'")}')">
+                <div class="unit-mini-label" title="${u}">${u}</div>
+                <div class="unit-mini-percent">${pct}%</div>
+                <div class="unit-mini-bar"><div class="unit-mini-bar-fill" style="width:${pct}%"></div></div>
+            </div>`;
         }).join('');
-    }
+    };
 
-    // ─── Tasks ───
-    function renderTasks() {
-        const unitData = appData[currentUnit] || {};
-        let unitDone = 0;
-        const total = wspCategories.reduce((s,c) => s + c.tasks.length, 0);
-        let html = '';
+    window.renderTasks = function() {
+        const ud = appData[currentUnit] || {};
+        const total = wspCategories.reduce((s,c)=>s+c.tasks.length,0);
+        let unitDone = 0, html = '';
 
-        wspCategories.forEach((cat, ci) => {
-            const catDone = cat.tasks.filter(t => (unitData[t.id]||[]).length > 0).length;
-            html += `
-                <div class="section-header" style="animation-delay:${ci*0.05}s">
-                    <div class="section-line"></div>
-                    <div class="section-label">${cat.category}</div>
-                    <div class="section-count">${catDone}/${cat.tasks.length}</div>
-                    <div class="section-line"></div>
-                </div>`;
-
-            cat.tasks.forEach((task, ti) => {
-                const files = unitData[task.id] || [];
+        wspCategories.forEach((cat,ci) => {
+            const cd = cat.tasks.filter(t=>(ud[t.id]||[]).length>0).length;
+            html += `<div class="section-header" style="animation-delay:${ci*0.05}s">
+                <div class="section-line"></div>
+                <div class="section-label">${cat.category}</div>
+                <div class="section-count">${cd}/${cat.tasks.length}</div>
+                <div class="section-line"></div>
+            </div>`;
+            cat.tasks.forEach((task,ti) => {
+                const files = ud[task.id] || [];
                 const done = files.length > 0;
                 if (done) unitDone++;
-
-                html += `
-                    <div class="task-card ${done ? 'completed' : ''}" style="animation-delay:${(ci*10+ti)*0.04}s">
-                        <div class="task-top">
-                            <div style="flex:1">
-                                <div class="task-name-row">
-                                    <span class="task-id-badge">${task.id}</span>
-                                    <span class="task-name">${task.title}</span>
-                                </div>
-                            </div>
-                            <span class="status-chip ${done ? 'done' : 'pending'}">${done ? '✅ มีข้อมูล' : 'รอตรวจสอบ'}</span>
-                        </div>
-                        <div class="task-body">
-                            <div class="upload-row">
-                                <button class="btn-upload" onclick="triggerUpload('${task.id}','camera')">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                    ถ่ายภาพ
-                                </button>
-                                <button class="btn-upload" onclick="triggerUpload('${task.id}','file')">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                                    แนบไฟล์ / PDF
-                                </button>
-                                <input type="file" id="file-${task.id}" multiple onchange="handleFileUpload(event,'${task.id}')">
-                                <input type="file" id="cam-${task.id}" capture="environment" accept="image/*" onchange="handleFileUpload(event,'${task.id}')">
-                            </div>
-                            <div class="file-list" id="list-${task.id}">
-                                ${files.map((f, idx) => `
-                                    <div class="file-item">
-                                        <span class="file-icon">${f.type?.startsWith('image/') ? '🖼️' : f.type === 'application/pdf' ? '📑' : '📄'}</span>
-                                        <div class="file-name-text" onclick="viewFile('${task.id}',${idx})" title="${f.name}">${f.name}</div>
-                                        <button class="btn-delete" onclick="confirmDelete('${task.id}',${idx})">ลบ</button>
-                                    </div>`).join('')}
+                const safeId = task.id.replace('.','\\.');
+                html += `<div class="task-card ${done?'completed':''}" style="animation-delay:${(ci*10+ti)*0.04}s">
+                    <div class="task-top">
+                        <div style="flex:1">
+                            <div class="task-name-row">
+                                <span class="task-id-badge">${task.id}</span>
+                                <span class="task-name">${task.title}</span>
                             </div>
                         </div>
-                    </div>`;
+                        <span class="status-chip ${done?'done':'pending'}">${done?'✅ มีข้อมูล':'รอตรวจสอบ'}</span>
+                    </div>
+                    <div class="task-body">
+                        <div class="upload-row">
+                            <button class="btn-upload" onclick="triggerUpload('${task.id}','camera')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                ถ่ายภาพ
+                            </button>
+                            <button class="btn-upload" onclick="triggerUpload('${task.id}','file')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                แนบไฟล์/PDF
+                            </button>
+                            <input type="file" id="file-${task.id}" multiple onchange="handleFileUpload(event,'${task.id}')">
+                            <input type="file" id="cam-${task.id}" capture="environment" accept="image/*" onchange="handleFileUpload(event,'${task.id}')">
+                        </div>
+                        <div class="file-list" id="list-${task.id}">
+                            ${files.map((f,idx) => `
+                                <div class="file-item">
+                                    <span class="file-icon">${f.type?.startsWith('image/')?'🖼️':f.type==='application/pdf'?'📑':'📄'}</span>
+                                    <div class="file-name-text" onclick="viewFile('${task.id}',${idx})" title="${f.name}">${f.name}</div>
+                                    <button class="btn-delete" onclick="confirmDelete('${task.id}',${idx})">ลบ</button>
+                                </div>`).join('')}
+                        </div>
+                    </div>
+                </div>`;
             });
         });
-
         document.getElementById('task-list').innerHTML = html;
         document.getElementById('unit-name-display').innerText = currentUnit;
         document.getElementById('unit-stat-text').innerText = `เสร็จ ${unitDone}/${total} หัวข้อ`;
-    }
+    };
 
-    // ─── Dashboard ───
-    function updateDashboard() {
+    window.updateDashboard = function() {
         let total = 0, done = 0;
-        units.forEach(u => {
-            wspCategories.forEach(c => c.tasks.forEach(t => {
-                total++;
-                if (appData[u]?.[t.id]?.length > 0) done++;
-            }));
-        });
-        const pct = total === 0 ? 0 : Math.round(done / total * 100);
+        units.forEach(u => wspCategories.forEach(c => c.tasks.forEach(t => {
+            total++;
+            if ((appData[u]||{})[t.id]?.length > 0) done++;
+        })));
+        const pct = total ? Math.round(done/total*100) : 0;
         document.getElementById('overall-pct').innerText = pct;
         document.getElementById('main-progress-fill').style.width = pct + '%';
         document.getElementById('dash-completed').innerText = done;
         document.getElementById('dash-total').innerText = `จาก ${total} หัวข้อ`;
-    }
+    };
 
-    // ─── File Handling ───
-    function triggerUpload(id, type) {
-        document.getElementById((type === 'camera' ? 'cam-' : 'file-') + id).click();
-    }
+    // ─── FILE HANDLING ────────────────────────────────────────────
+    window.triggerUpload = function(id, type) {
+        document.getElementById((type==='camera'?'cam-':'file-') + id).click();
+    };
 
-    async function handleFileUpload(event, taskId) {
+    window.handleFileUpload = async function(event, taskId) {
         const files = Array.from(event.target.files);
         if (!files.length) return;
-        showToast("⏳ กำลังประมวลผล...");
+        
+        showToast("⏳ กำลังประมวลผลไฟล์...");
         if (!appData[currentUnit][taskId]) appData[currentUnit][taskId] = [];
-
         for (let f of files) {
             let data = f.type.startsWith('image/') ? await compressImage(f) : await convertBase64(f);
-            if (data.length > 2000000) { showModal('warn', 'ไฟล์ใหญ่เกินไป', 'กรุณาใช้ไฟล์ที่มีขนาดไม่เกิน 2MB ต่อไฟล์'); continue; }
-            appData[currentUnit][taskId].push({ name: f.name, type: f.type, data, timestamp: Date.now() });
+            if (data.length > 800000) { showModal('warn','ไฟล์ใหญ่เกินไป','ระบบ Cloud รองรับไฟล์ไม่เกิน ~800KB ต่อชิ้น กรุณาย่อขนาดไฟล์ก่อน (ถ้าเป็นภาพระบบจะย่อให้อัตโนมัติอยู่แล้ว)'); continue; }
+            appData[currentUnit][taskId].push({ name:f.name, type:f.type, data, timestamp:Date.now() });
         }
         event.target.value = '';
-        saveAndRefresh();
-        showToast("✅ บันทึกเรียบร้อย");
-    }
+        await saveToFirebase();
+        showToast("✅ บันทึกและ sync เรียบร้อย");
+    };
 
     function compressImage(file) {
         return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = e => {
-                const img = new Image();
-                img.src = e.target.result;
+            const r = new FileReader(); r.readAsDataURL(file);
+            r.onload = e => {
+                const img = new Image(); img.src = e.target.result;
                 img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const scale = Math.min(1, 1024 / img.width);
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.72));
+                    const c = document.createElement('canvas');
+                    const sc = Math.min(1, 800/img.width);
+                    c.width = img.width*sc; c.height = img.height*sc;
+                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                    resolve(c.toDataURL('image/jpeg', 0.65));
                 };
             };
         });
     }
-
     function convertBase64(file) {
-        return new Promise(resolve => {
-            const r = new FileReader();
-            r.onload = () => resolve(r.result);
-            r.readAsDataURL(file);
-        });
+        return new Promise(r => { const fr = new FileReader(); fr.onload = ()=>r(fr.result); fr.readAsDataURL(file); });
     }
 
-    function viewFile(taskId, idx) {
+    window.viewFile = function(taskId, idx) {
         const f = appData[currentUnit][taskId][idx];
         const win = window.open();
         if (f.type?.startsWith('image/')) {
             win.document.write(`<body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh"><img src="${f.data}" style="max-width:100%;max-height:100vh"></body>`);
-        } else if (f.type === 'application/pdf') {
+        } else if (f.type==='application/pdf') {
             win.document.write(`<iframe src="${f.data}" frameborder="0" style="border:0;width:100%;height:100vh"></iframe>`);
         } else {
-            const a = document.createElement('a'); a.href = f.data; a.download = f.name; a.click(); win.close();
+            const a = document.createElement('a'); a.href=f.data; a.download=f.name; a.click(); win.close();
         }
-    }
+    };
 
-    function saveAndRefresh() {
-        try {
-            localStorage.setItem('pwa_wsp_68_data', JSON.stringify(appData));
-        } catch (e) {
-            showModal('warn', 'พื้นที่เต็ม!', 'กรุณาลบไฟล์เก่า หรือ Export ก่อน');
-            return;
-        }
-        renderTabs();
-        renderUnitMiniCards();
-        renderTasks();
-        updateDashboard();
-    }
-
-    // ─── Export / Import ───
-    function exportData() {
-        const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appData));
+    // ─── EXPORT / IMPORT ──────────────────────────────────────────
+    window.exportData = function() {
         const a = document.createElement('a');
-        a.href = uri;
-        a.download = `WSP68_${currentUnit}_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        showToast("💾 Export สำเร็จ");
-    }
-
-    function handleImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appData));
+        a.download = `WSP68_${new Date().toISOString().split('T')[0]}.json`;
+        a.click(); showToast("💾 Export สำเร็จ");
+    };
+    window.handleImport = function(event) {
+        const file = event.target.files[0]; if (!file) return;
         const r = new FileReader();
-        r.onload = e => {
+        r.onload = async e => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (typeof imported === 'object' && !Array.isArray(imported)) {
-                    appData = imported;
-                    units.forEach(u => { if (!appData[u]) appData[u] = {}; });
-                    saveAndRefresh();
-                    showModal('ok', 'นำเข้าสำเร็จ', 'ข้อมูลได้รับการอัปเดตเรียบร้อยแล้ว');
+                if (typeof imported==='object' && !Array.isArray(imported)) {
+                    window.appData = imported;
+                    units.forEach(u=>{ if(!appData[u]) appData[u]={}; });
+                    await saveToFirebase();
+                    showModal('ok','นำเข้าสำเร็จ','ข้อมูลได้รับการ sync ไปยัง Cloud เรียบร้อย');
                 } else throw new Error();
-            } catch {
-                showModal('warn', 'ไฟล์ไม่ถูกต้อง', 'กรุณาใช้ไฟล์ JSON ที่ Export จากระบบนี้เท่านั้น');
-            }
+            } catch { showModal('warn','ไฟล์ไม่ถูกต้อง','กรุณาใช้ไฟล์ JSON จากระบบนี้เท่านั้น'); }
         };
-        r.readAsText(file);
-        event.target.value = '';
-    }
+        r.readAsText(file); event.target.value='';
+    };
 
-    // ─── Line ───
-    function copyToLine() {
-        let text = `📊 สรุปงาน WSP 68\n📍 หน่วย: ${currentUnit}\n${'─'.repeat(22)}\n`;
+    // ─── LINE ─────────────────────────────────────────────────────
+    window.copyToLine = function() {
+        let text = `📊 WSP 68 · หน่วย: ${currentUnit}\n${'─'.repeat(24)}\n`;
         wspCategories.forEach(cat => {
             text += `\n▸ ${cat.category}\n`;
             cat.tasks.forEach(t => {
-                const done = appData[currentUnit]?.[t.id]?.length > 0;
-                text += `${done ? '✅' : '⬜'} [${t.id}] ${t.title}\n`;
+                const done = (appData[currentUnit]||{})[t.id]?.length > 0;
+                text += `${done?'✅':'⬜'} [${t.id}] ${t.title}\n`;
             });
         });
         navigator.clipboard.writeText(text)
-            .then(() => showToast("💬 คัดลอกสำหรับ LINE แล้ว"))
-            .catch(() => showModal('warn', 'ข้อผิดพลาด', 'ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาลองใหม่'));
-    }
+            .then(()=>showToast("💬 คัดลอกสำหรับ LINE แล้ว"))
+            .catch(()=>showModal('warn','ข้อผิดพลาด','ไม่สามารถคัดลอกได้ กรุณาลองใหม่'));
+    };
 
-    // ─── Modal ───
-    function showModal(type, title, body, confirmCb) {
-        const icons = { ok: '✅', warn: '⚠️', delete: '🗑️', error: '❌' };
-        document.getElementById('modal-icon').innerText = icons[type] || '💬';
+    // ─── MODAL & TOAST ────────────────────────────────────────────
+    window.showModal = function(type, title, body, cb) {
+        const icons = {ok:'✅',warn:'⚠️',delete:'🗑️'};
+        document.getElementById('modal-icon').innerText = icons[type]||'💬';
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-body').innerText = body;
-
         const btns = document.getElementById('modal-btns');
-        const confirmBtn = document.getElementById('modal-confirm');
-
-        if (confirmCb) {
-            btns.innerHTML = `
-                <button class="btn-m btn-m-cancel" onclick="closeModal()">ยกเลิก</button>
-                <button class="btn-m btn-m-confirm" id="modal-confirm">ตกลง ลบ</button>`;
-            document.getElementById('modal-confirm').onclick = () => { confirmCb(); closeModal(); };
+        if (cb) {
+            btns.innerHTML = `<button class="btn-m btn-m-cancel" onclick="closeModal()">ยกเลิก</button>
+                              <button class="btn-m btn-m-confirm" id="mc">ยืนยัน ลบ</button>`;
+            document.getElementById('mc').onclick = ()=>{cb(); closeModal();};
         } else {
             btns.innerHTML = `<button class="btn-m btn-m-ok" onclick="closeModal()">รับทราบ</button>`;
         }
         document.getElementById('modal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('modal').classList.remove('active');
-    }
-
-    function confirmDelete(taskId, idx) {
+    };
+    window.closeModal = function() { document.getElementById('modal').classList.remove('active'); };
+    window.confirmDelete = async function(taskId, idx) {
         const f = appData[currentUnit][taskId][idx];
-        showModal('delete', 'ยืนยันการลบ', `ลบไฟล์ "${f.name}" ใช่หรือไม่?`, () => {
-            appData[currentUnit][taskId].splice(idx, 1);
-            saveAndRefresh();
+        showModal('delete','ยืนยันการลบ',`ลบไฟล์ "${f.name}" ใช่หรือไม่?`, async ()=>{
+            appData[currentUnit][taskId].splice(idx,1);
+            await saveToFirebase();
             showToast("🗑️ ลบไฟล์เรียบร้อย");
         });
-    }
-
-    // ─── Toast ───
-    function showToast(msg) {
+    };
+    window.showToast = function(msg) {
         const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.className = 'show';
-        setTimeout(() => { t.className = ''; }, 3000);
-    }
+        t.innerText = msg; t.className = 'show';
+        setTimeout(()=>{t.className='';}, 3000);
+    };
 
-    window.onload = init;
+    // ─── INIT ─────────────────────────────────────────────────────
+    const d = new Date();
+    document.getElementById('header-date').innerText =
+        d.toLocaleDateString('th-TH', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+
 </script>
 </body>
 </html>
