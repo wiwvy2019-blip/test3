@@ -4,513 +4,808 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>WSP ละหานทราย – ติดตามความก้าวหน้า</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Sarabun',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
-textarea,input{font-family:'Sarabun',sans-serif}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:#f1f5f9}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes savePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
-.fade-in{animation:fadeIn .35s ease forwards}
-.slide-up{animation:slideUp .4s cubic-bezier(.22,1,.36,1) forwards}
-.save-pulse{animation:savePulse .4s ease}
-.accordion{overflow:hidden;transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#e2e8f0;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --indigo:#4f46e5;--indigo-light:#eef2ff;--indigo-mid:#818cf8;
+  --green:#059669;--green-light:#ecfdf5;
+  --amber:#d97706;--amber-light:#fffbeb;
+  --red:#dc2626;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 20px 40px rgba(0,0,0,.1),0 8px 16px rgba(0,0,0,.06);
+  --radius:20px;--radius-sm:12px;
+}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+button,input,textarea,select{font-family:'Sarabun',sans-serif}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .35s ease forwards}
+.spin-anim{animation:spin .9s linear infinite}
+.container{max-width:740px;margin:0 auto;padding:0 16px}
+
+#loading-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.loading-text{font-size:13px;font-weight:700;color:var(--text3)}
+
+.header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;max-width:740px;margin:0 auto;gap:12px}
+.logo-wrap{display:flex;align-items:center;gap:11px}
+.logo-icon{background:linear-gradient(135deg,#0ea5e9,#4f46e5);padding:9px 11px;border-radius:14px;color:white;box-shadow:0 4px 12px rgba(79,70,229,.35);display:flex}
+.site-title{font-size:18px;font-weight:900;color:var(--text);letter-spacing:-.4px}
+.site-sub{font-size:11px;color:var(--text3);font-weight:600;margin-top:1px}
+.save-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:6px 12px;border-radius:99px;transition:all .3s;white-space:nowrap;border:1px solid var(--border);background:var(--bg);color:var(--text3)}
+.save-badge.saved{background:var(--green-light);color:var(--green);border-color:#a7f3d0}
+.save-badge.saving{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+
+.dashboard{background:linear-gradient(140deg,#0f172a 0%,#1e1b4b 45%,#0c1445 100%);border-radius:var(--radius);padding:26px 28px;margin:20px 0 24px;position:relative;overflow:hidden;box-shadow:0 24px 48px -12px rgba(49,46,129,.55);border:1px solid rgba(99,102,241,.25)}
+.db-glow1{position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(99,102,241,.35);filter:blur(60px);pointer-events:none}
+.db-glow2{position:absolute;bottom:-30px;left:-30px;width:150px;height:150px;border-radius:50%;background:rgba(6,182,212,.2);filter:blur(45px);pointer-events:none}
+.db-content{position:relative;z-index:1}
+.db-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:16px;flex-wrap:wrap}
+.db-pct{font-size:62px;font-weight:900;color:white;line-height:1;letter-spacing:-3px;font-family:'IBM Plex Mono',monospace}
+.db-label{color:#a5b4fc;font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.db-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.db-count{background:rgba(255,255,255,.1);color:#e0e7ff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12)}
+.btn-report{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#818cf8,#4f46e5);color:white;font-size:13px;font-weight:700;padding:10px 18px;border-radius:12px;border:none;cursor:pointer;box-shadow:0 6px 0 #3730a3,0 10px 20px rgba(79,70,229,.4);transition:all .12s;outline:none}
+.btn-report:active{box-shadow:0 0 0 #3730a3;transform:translateY(6px)}
+.progress-track{width:100%;height:13px;border-radius:99px;background:rgba(15,23,42,.65);border:1px solid rgba(255,255,255,.08);overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#3b82f6,#8b5cf6);box-shadow:0 0 18px rgba(56,189,248,.6);transition:width .9s cubic-bezier(.22,1,.36,1);position:relative}
+.progress-fill::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.35);border-radius:99px}
+.db-score{margin-top:14px;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border-radius:10px;padding:7px 16px;border:1px solid rgba(255,255,255,.1);color:white;font-size:13px;font-weight:700}
+.score-num{color:#818cf8;font-size:17px;font-weight:900;font-family:'IBM Plex Mono',monospace}
+
+/* EMPLOYEE BANNER */
+.emp-banner{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.emp-top-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.emp-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;color:white;font-size:19px;font-weight:900;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.emp-fields{flex:1;min-width:200px}
+.emp-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
+.emp-row{display:flex;gap:10px;flex-wrap:wrap}
+.emp-input{flex:1;min-width:140px;padding:9px 14px;font-size:13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;transition:all .2s;font-weight:600}
+.emp-input:focus{border-color:var(--indigo);background:white;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.btn-confirm{padding:9px 16px;background:var(--indigo);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;outline:none;transition:all .2s}
+.btn-confirm:hover{background:#3730a3}
+
+/* TEAM BAR */
+.team-bar{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.team-bar-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.5px}
+.team-avatars{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.team-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 5px;border-radius:99px;background:var(--bg);border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .2s}
+.team-chip:hover{border-color:var(--indigo);background:var(--indigo-light);color:var(--indigo)}
+.team-chip.me{border-color:var(--indigo);background:var(--indigo-light);color:var(--indigo)}
+.team-chip-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0}
+.team-chip-time{font-size:10px;color:var(--text3);font-weight:500}
+.btn-team{display:flex;align-items:center;gap:6px;padding:6px 13px;font-size:12px;font-weight:700;background:var(--indigo-light);color:var(--indigo);border:1.5px solid #c7d2fe;border-radius:99px;cursor:pointer;outline:none;transition:all .2s}
+.btn-team:hover{background:var(--indigo);color:white;border-color:var(--indigo)}
+
+/* TEAM MODAL */
+.overlay{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.65);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease forwards}
+.team-modal{background:white;border-radius:24px;width:100%;max-width:460px;box-shadow:var(--shadow-lg);overflow:hidden;border:1px solid var(--border)}
+.modal-hdr{background:rgba(255,255,255,.97);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-body-scroll{padding:18px 20px;max-height:65vh;overflow-y:auto}
+.member-card{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:16px;border:1px solid var(--border);margin-bottom:10px;transition:all .2s}
+.member-card:hover{border-color:#c7d2fe;background:var(--indigo-light)}
+.member-av-lg{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:17px;font-weight:900;flex-shrink:0;box-shadow:var(--shadow-sm)}
+.member-task-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;background:var(--green-light);color:var(--green);border:1px solid #a7f3d0}
+
+/* CAT CARD */
+.cat-card{background:white;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden;transition:all .3s;margin-bottom:14px}
+.cat-card.expanded{border-color:#c7d2fe;box-shadow:0 10px 28px -8px rgba(79,70,229,.15)}
+.cat-card.done{border-color:#a7f3d0;background:linear-gradient(to right,#f0fdf4,white);box-shadow:0 8px 24px -8px rgba(16,185,129,.18)}
+.cat-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;cursor:pointer;user-select:none;transition:background .2s}
+.cat-header:hover{background:rgba(248,250,252,.8)}
+.cat-icon-wrap{padding:10px 12px;border-radius:14px;display:flex;align-items:center;transition:all .3s;flex-shrink:0}
+.cat-info{flex:1;padding:0 14px 0 2px}
+.cat-title{font-weight:700;font-size:13.5px;line-height:1.4;margin-bottom:7px}
+.cat-progress-row{display:flex;align-items:center;gap:9px}
+.mini-track{width:120px;height:6px;border-radius:99px;background:rgba(148,163,184,.18);overflow:hidden;flex-shrink:0}
+.mini-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.cat-count{font-size:11px;font-weight:700;color:var(--text2);background:var(--bg);padding:2px 8px;border-radius:6px}
+.cat-pct{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px}
+.chevron{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:all .25s;flex-shrink:0}
+.accordion-body{overflow:hidden;transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .3s ease}
+.cat-remark-box{margin:0 16px 14px;padding:14px;background:linear-gradient(to right,#fffbeb,rgba(255,251,235,.4));border:1px solid rgba(253,186,116,.5);border-radius:14px}
+.remark-label{font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.remark-textarea{width:100%;padding:9px 13px;font-size:13px;border:1px solid #fed7aa;border-radius:10px;background:white;outline:none;resize:none;color:var(--text);transition:all .2s;line-height:1.6}
+.remark-textarea:focus{border-color:#fb923c;box-shadow:0 0 0 3px rgba(251,146,60,.15)}
+
+/* TASK */
+.task-list{display:flex;flex-direction:column;gap:9px;padding:0 16px 18px}
+.task-item{border-radius:16px;border:1.5px solid var(--border);background:white;transition:all .25s;overflow:hidden}
+.task-item.completed-task{border-color:#a7f3d0;background:rgba(240,253,244,.6)}
+.task-top{display:flex;align-items:flex-start;gap:13px;padding:13px 15px;cursor:pointer}
+.check-btn{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:2px solid #cbd5e1;background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .25s;outline:none;margin-top:1px}
+.check-btn.checked{background:linear-gradient(135deg,#34d399,#059669);border-color:#059669;box-shadow:0 0 14px rgba(5,150,105,.35)}
+.task-text{font-size:13.5px;line-height:1.55;flex:1;font-weight:600;transition:all .2s}
+.task-text.done{text-decoration:line-through;color:var(--text3);font-weight:400}
+.task-badge{display:inline-block;padding:1px 7px;border-radius:6px;font-size:11px;font-weight:800;margin-right:7px;vertical-align:middle}
+.task-actions{padding:0 15px 13px;display:flex;flex-direction:column;gap:10px}
+.task-remark-input{width:100%;padding:9px 13px;font-size:13px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);outline:none;color:var(--text);transition:all .2s}
+.task-remark-input:focus{border-color:var(--indigo-mid);background:white;box-shadow:0 0 0 3px rgba(129,140,248,.15)}
+.upload-section{border:2px dashed #c7d2fe;border-radius:12px;padding:11px 13px;background:var(--indigo-light);cursor:pointer;transition:all .2s;position:relative;flex:1;min-width:150px}
+.upload-section:hover{border-color:var(--indigo);background:#e0e7ff}
+.upload-section input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--indigo);pointer-events:none}
+.upload-hint{font-size:10px;color:var(--indigo-mid);font-weight:500;margin-top:2px}
+.view-files-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(to bottom,#818cf8,#4f46e5);color:white;border:none;border-radius:10px;flex-shrink:0;box-shadow:0 4px 0 #3730a3,0 6px 12px rgba(79,70,229,.3);transition:all .12s;outline:none;white-space:nowrap}
+.view-files-btn:active{box-shadow:0 0 0 #3730a3;transform:translateY(4px)}
+.view-files-btn.no-files{background:linear-gradient(to bottom,#e2e8f0,#cbd5e1);color:#94a3b8;box-shadow:0 4px 0 #94a3b8;cursor:not-allowed}
+.file-previews{display:flex;flex-wrap:wrap;gap:8px;padding:0 15px 12px}
+.file-thumb{position:relative;width:68px;height:68px;border-radius:10px;overflow:hidden;border:2px solid #c7d2fe;background:white;flex-shrink:0}
+.file-thumb img{width:100%;height:100%;object-fit:cover}
+.file-thumb-doc{width:68px;height:68px;border-radius:10px;border:2px solid #c7d2fe;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;flex-shrink:0}
+.file-ext-badge{font-size:10px;font-weight:800;color:var(--indigo);background:var(--indigo-light);padding:2px 6px;border-radius:4px;font-family:'IBM Plex Mono',monospace}
+.file-name-sm{font-size:9px;color:var(--text3);font-weight:600;text-align:center;word-break:break-all;max-height:26px;overflow:hidden}
+.remove-file-btn{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);border:none;color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:11px;outline:none}
+.completed-meta{display:flex;align-items:center;gap:7px;padding:0 15px 12px;flex-wrap:wrap}
+.meta-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px;background:var(--green-light);color:#065f46;border:1px solid #a7f3d0}
+.evidence-tag{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;cursor:pointer;transition:all .2s;white-space:nowrap}
+.evidence-tag:hover{background:#dbeafe}
+
+/* FILE VIEWER */
+.fv-overlay{position:fixed;inset:0;z-index:90;background:rgba(5,10,20,.93);backdrop-filter:blur(16px);display:flex;flex-direction:column;animation:fadeUp .2s ease forwards}
+.fv-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.fv-title{color:white;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px}
+.fv-sub{color:#94a3b8;font-size:11px;font-weight:600;margin-top:2px}
+.fv-close{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none}
+.fv-close:hover{background:rgba(255,255,255,.2)}
+.fv-main{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;max-width:760px;width:100%;margin:0 auto}
+.fv-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden}
+.fv-item-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.05)}
+.fv-item-name{color:#e2e8f0;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:10px}
+.fv-item-ext{background:var(--indigo);color:white;font-size:10px;font-weight:800;padding:2px 7px;border-radius:5px;font-family:'IBM Plex Mono',monospace}
+.fv-img{width:100%;max-height:420px;object-fit:contain;display:block;background:#000}
+.fv-doc-body{padding:24px 20px;text-align:center;color:#94a3b8}
+.fv-delete-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;font-size:11px;font-weight:700;background:rgba(220,38,38,.2);color:#fca5a5;border:1px solid rgba(220,38,38,.3);border-radius:7px;cursor:pointer;outline:none;transition:all .2s}
+.fv-delete-btn:hover{background:rgba(220,38,38,.4);color:white}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;left:0;right:0;z-index:100;display:flex;justify-content:center;padding:0 16px;pointer-events:none;animation:toastIn .35s ease forwards}
+.toast{background:rgba(15,23,42,.93);backdrop-filter:blur(20px);color:white;padding:14px 18px;border-radius:18px;display:flex;align-items:center;gap:13px;max-width:430px;width:100%;border:1px solid rgba(100,116,139,.4);box-shadow:0 20px 50px rgba(0,0,0,.45);pointer-events:auto}
+.toast-icon{padding:8px 10px;border-radius:11px;flex-shrink:0;display:flex}
+
+/* SUMMARY MODAL */
+.modal-overlay-bottom{position:fixed;inset:0;z-index:80;background:rgba(15,23,42,.65);backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center;animation:fadeUp .2s ease forwards}
+.modal-sheet{background:#f8fafc;width:100%;max-width:700px;height:88vh;border-radius:24px 24px 0 0;box-shadow:0 -24px 60px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.2);animation:fadeUp .3s cubic-bezier(.22,1,.36,1) forwards}
+.modal-body-full{flex:1;overflow-y:auto;padding:20px}
+.modal-close{width:36px;height:36px;border-radius:50%;background:var(--bg);border:none;color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.stat-card{background:white;padding:20px 16px;border-radius:22px;border:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:13px;padding-left:3px}
+.section-stripe{width:9px;height:26px;border-radius:99px;flex-shrink:0}
+.section-title{font-weight:900;font-size:15px;color:var(--text)}
+.section-badge{font-size:12px;font-weight:800;padding:2px 10px;border-radius:7px;margin-left:6px}
+.modal-task-item{background:white;padding:13px 16px;border-radius:16px;border:1px solid var(--border);display:flex;align-items:flex-start;gap:11px;box-shadow:var(--shadow-sm);margin-bottom:9px}
+.modal-task-item.done-item{background:linear-gradient(to right,rgba(240,253,244,.6),white);border-color:#a7f3d0}
+.copy-btn{flex-shrink:0;padding:7px 9px;border-radius:9px;background:white;border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;transition:all .2s;outline:none}
+.copy-btn:hover{background:var(--indigo);color:white;border-color:var(--indigo)}
+.empty-state{background:white;padding:24px;border-radius:20px;border:1px solid var(--border);text-align:center;color:var(--text3);font-weight:600;font-size:14px}
+
+@media(max-width:480px){.db-pct{font-size:48px}.btn-report span{display:none}}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script>
-var h = React.createElement;
-var useState = React.useState;
-var useEffect = React.useEffect;
-var useRef = React.useRef;
-var useCallback = React.useCallback;
 
-var INITIAL_DATA = [
-  { id:1, title:"1. การจัดตั้งทีมงาน (Assemble the WSP team)", tasks:[
-    {id:"1.1",text:"เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบันและถูกต้อง",completed:true,remark:""},
-    {id:"1.2",text:"รายชื่อผู้มีส่วนได้ส่วนเสียสอดคล้องตามความเสี่ยง",completed:true,remark:""},
-    {id:"1.3",text:"สมาชิกหรือรายชื่อผู้ติดต่อมีความเชี่ยวชาญกับความเสี่ยง",completed:false,remark:""},
-    {id:"1.4",text:"ทีมงานประชุมตามแผนที่กำหนดและหลังจากเกิดเหตุ",completed:false,remark:""},
-    {id:"1.5",text:"มีการรายงานผลการประชุม WSP ให้พนักงานทราบ",completed:false,remark:""},
-    {id:"1.6",text:"บันทึกการประชุม ความก้าวหน้าในการดำเนินงาน",completed:false,remark:""},
-  ], remark:""},
-  { id:2, title:"2. การสำรวจวินิจฉัยระบบประปา (Describe the water supply system)", tasks:[
-    {id:"2.1",text:"การอธิบายระบบประปาครบถ้วนถูกต้อง",completed:false,remark:""},
-    {id:"2.2",text:"Process Flow diagram ครบถ้วน เป็นปัจจุบัน ตั้งแต่แหล่งน้ำถึงผู้ใช้น้ำ",completed:false,remark:""},
-    {id:"2.3",text:"การอธิบายอุบัติการณ์หรือความเสี่ยง",completed:false,remark:""},
-    {id:"2.4",text:"การสำรวจความพร้อมใช้งานของระบบประปา",completed:false,remark:""},
-  ], remark:""},
-  { id:3, title:"3. การระบุความเสี่ยง ประเมินและทวนสอบ (Identify hazards & assess risks)", tasks:[
-    {id:"3.1",text:"ระบุอันตรายและเหตุการณ์อันตรายได้ครบถ้วนทั้ง 3 ระบบ",completed:false,remark:""},
-    {id:"3.2",text:"การระบุมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
-    {id:"3.3",text:"การทวนสอบมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
-    {id:"3.4",text:"ประเมินความเสี่ยง โดยพิจารณาร่วมกับมาตรการควบคุมที่มีอยู่",completed:false,remark:""},
-    {id:"3.5",text:"จัดลำดับความสำคัญของความเสี่ยงที่มีนัยสำคัญ",completed:false,remark:""},
-  ], remark:""},
-  { id:4, title:"4. แผนปรับปรุงพัฒนา (Improvement/upgrade plan)", tasks:[
-    {id:"4.1",text:"จัดทำแผนปรับปรุงสำหรับความเสี่ยงที่สำคัญที่ควบคุมไม่ได้",completed:false,remark:""},
-    {id:"4.2",text:"แผนปรับปรุงมีความชัดเจนสอดคล้องกับผลประเมิน",completed:false,remark:""},
-    {id:"4.3",text:"การดำเนินงานตามแผนปรับปรุง",completed:false,remark:""},
-  ], remark:""},
-  { id:5, title:"5. การดำเนินการตามมาตรการควบคุม (Monitoring control measures)", tasks:[
-    {id:"5.1",text:"จัดทำแผนติดตามการปฏิบัติงานครอบคลุมมาตรการแก้ไข",completed:false,remark:""},
-    {id:"5.2",text:"บันทึกติดตามให้เห็นว่าการปฏิบัติงานเป็นไปตามแผน",completed:false,remark:""},
-    {id:"5.3",text:"ตรวจทานประสิทธิภาพแผนการแก้ไข",completed:false,remark:""},
-  ], remark:""},
-  { id:6, title:"6. การบริหารจัดการและแผนสนับสนุน (Management procedures)", tasks:[
-    {id:"6.1",text:"ทบทวนปรับปรุงคู่มือปฏิบัติงานให้เป็นปัจจุบัน",completed:false,remark:""},
-    {id:"6.2",text:"ดำเนินการสอบทาน",completed:false,remark:""},
-    {id:"6.3",text:"แผนการจัดการในภาวะฉุกเฉิน (Emergency response plan)",completed:false,remark:""},
-    {id:"6.4",text:"ปรับปรุงพื้นที่ระบบประปาให้สะอาดเรียบร้อย ปลอดภัย (5ส)",completed:false,remark:""},
-    {id:"6.5",text:"พนักงานได้รับการฝึกอบรม/พัฒนาทักษะด้านระบบประปา",completed:false,remark:""},
-  ], remark:""},
-  { id:7, title:"7. การทบทวนและปรับปรุง WSP (Review of the WSP)", tasks:[
-    {id:"7.1",text:"กำหนดตารางเวลาการทบทวนและแก้ไข WSP เป็นประจำ",completed:false,remark:""},
-    {id:"7.2",text:"ทบทวนและแก้ไข WSP ตามที่กำหนดไว้",completed:false,remark:""},
-  ], remark:""},
+<div id="loading-screen">
+  <svg class="spin-anim" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+  <div class="loading-text">กำลังโหลดข้อมูลร่วมกัน...</div>
+</div>
+
+<div id="root" style="display:none"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  INITIAL TASK STRUCTURE
+// ══════════════════════════════════════════════════════
+var INITIAL_TASKS=[
+  {id:1,title:"1. การจัดตั้งทีมงาน (Assemble the WSP team)",tasks:[
+    {id:"1.1",text:"เอกสารจัดตั้งทีมงาน WSP เป็นปัจจุบันและถูกต้อง"},
+    {id:"1.2",text:"รายชื่อผู้มีส่วนได้ส่วนเสียสอดคล้องตามความเสี่ยง"},
+    {id:"1.3",text:"สมาชิกหรือรายชื่อผู้ติดต่อมีความเชี่ยวชาญกับความเสี่ยง"},
+    {id:"1.4",text:"ทีมงานประชุมตามแผนที่กำหนดและหลังจากเกิดเหตุ"},
+    {id:"1.5",text:"มีการรายงานผลการประชุม WSP ให้พนักงานทราบ"},
+    {id:"1.6",text:"บันทึกการประชุม ความก้าวหน้าในการดำเนินงาน"},
+  ]},
+  {id:2,title:"2. การสำรวจวินิจฉัยระบบประปา (Describe the water supply system)",tasks:[
+    {id:"2.1",text:"การอธิบายระบบประปาครบถ้วนถูกต้อง"},
+    {id:"2.2",text:"Process Flow diagram ครบถ้วน เป็นปัจจุบัน ตั้งแต่แหล่งน้ำถึงผู้ใช้น้ำ"},
+    {id:"2.3",text:"การอธิบายอุบัติการณ์หรือความเสี่ยง"},
+    {id:"2.4",text:"การสำรวจความพร้อมใช้งานของระบบประปา"},
+  ]},
+  {id:3,title:"3. การระบุความเสี่ยง ประเมินและทวนสอบ (Identify hazards & assess risks)",tasks:[
+    {id:"3.1",text:"ระบุอันตรายและเหตุการณ์อันตรายได้ครบถ้วนทั้ง 3 ระบบ"},
+    {id:"3.2",text:"การระบุมาตรการควบคุมที่มีอยู่"},
+    {id:"3.3",text:"การทวนสอบมาตรการควบคุมที่มีอยู่"},
+    {id:"3.4",text:"ประเมินความเสี่ยง โดยพิจารณาร่วมกับมาตรการควบคุมที่มีอยู่"},
+    {id:"3.5",text:"จัดลำดับความสำคัญของความเสี่ยงที่มีนัยสำคัญ"},
+  ]},
+  {id:4,title:"4. แผนปรับปรุงพัฒนา (Improvement/upgrade plan)",tasks:[
+    {id:"4.1",text:"จัดทำแผนปรับปรุงสำหรับความเสี่ยงที่สำคัญที่ควบคุมไม่ได้"},
+    {id:"4.2",text:"แผนปรับปรุงมีความชัดเจนสอดคล้องกับผลประเมิน"},
+    {id:"4.3",text:"การดำเนินงานตามแผนปรับปรุง"},
+  ]},
+  {id:5,title:"5. การดำเนินการตามมาตรการควบคุม (Monitoring control measures)",tasks:[
+    {id:"5.1",text:"จัดทำแผนติดตามการปฏิบัติงานครอบคลุมมาตรการแก้ไข"},
+    {id:"5.2",text:"บันทึกติดตามให้เห็นว่าการปฏิบัติงานเป็นไปตามแผน"},
+    {id:"5.3",text:"ตรวจทานประสิทธิภาพแผนการแก้ไข"},
+  ]},
+  {id:6,title:"6. การบริหารจัดการและแผนสนับสนุน (Management procedures)",tasks:[
+    {id:"6.1",text:"ทบทวนปรับปรุงคู่มือปฏิบัติงานให้เป็นปัจจุบัน"},
+    {id:"6.2",text:"ดำเนินการสอบทาน"},
+    {id:"6.3",text:"แผนการจัดการในภาวะฉุกเฉิน (Emergency response plan)"},
+    {id:"6.4",text:"ปรับปรุงพื้นที่ระบบประปาให้สะอาดเรียบร้อย ปลอดภัย (5ส)"},
+    {id:"6.5",text:"พนักงานได้รับการฝึกอบรม/พัฒนาทักษะด้านระบบประปา"},
+  ]},
+  {id:7,title:"7. การทบทวนและปรับปรุง WSP (Review of the WSP)",tasks:[
+    {id:"7.1",text:"กำหนดตารางเวลาการทบทวนและแก้ไข WSP เป็นประจำ"},
+    {id:"7.2",text:"ทบทวนและแก้ไข WSP ตามที่กำหนดไว้"},
+  ]},
 ];
 
-var MAX_SCORE = 70;
-var STORAGE_KEY = 'wsp_lahansai_v3';
+var MAX_SCORE=70;
+var SHARED_KEY='wsp_shared_v1';
+var SESSION_KEY='wsp_session_name';
 
-// ── SVG helper ────────────────────────────────────────────────────────────────
-function svg(size, children, extra) {
-  return h('svg', Object.assign({
-    width:size, height:size, viewBox:"0 0 24 24", fill:"none",
-    stroke:"currentColor", strokeWidth:2,
-    strokeLinecap:"round", strokeLinejoin:"round",
-    style:{flexShrink:0, display:'block'}
-  }, extra||{}), children);
+// ── STATE ──
+var sharedData=null; // {cats, members}
+var myName='';
+var expanded=[1];
+var showSummary=false;
+var showTeam=false;
+var saveTimer=null;
+
+// ── COLORS ──
+var COLORS=['#4f46e5','#059669','#dc2626','#d97706','#7c3aed','#0891b2','#be185d','#65a30d','#c2410c','#0369a1'];
+function colorFor(n){var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%COLORS.length;return COLORS[h];}
+
+// ══════════════════════════════════════════════════════
+//  SHARED STORAGE
+// ══════════════════════════════════════════════════════
+async function loadShared(){
+  try{var r=await window.storage.get(SHARED_KEY,true);return r?JSON.parse(r.value):null;}catch(e){return null;}
 }
-function path(d, extra) { return h('path', Object.assign({d:d}, extra||{})); }
-function circle(cx,cy,r){ return h('circle',{cx:cx,cy:cy,r:r}); }
+async function saveShared(d){
+  try{await window.storage.set(SHARED_KEY,JSON.stringify(d),true);}catch(e){}
+}
 
-var ICONS = {
-  droplet: function(s){ return svg(s||22, path("M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z")); },
-  users:   function(s){ return svg(s||18, path("M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z")); },
-  alert:   function(s){ return svg(s||18, [path("M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z",{key:'p'}), path("M12 9v4",{key:'l'}), path("M12 17h.01",{key:'d'})]); },
-  bar:     function(s){ return svg(s||18, [path("M18 20V10",{key:'a'}),path("M12 20V4",{key:'b'}),path("M6 20v-6",{key:'c'})]); },
-  activity:function(s){ return svg(s||18, path("M22 12h-4l-3 9L9 3l-3 9H2")); },
-  file:    function(s){ return svg(s||18, [path("M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",{key:'a'}),path("M14 2v6h6",{key:'b'}),path("M16 13H8",{key:'c'}),path("M16 17H8",{key:'d'}),path("M10 9H8",{key:'e'})]); },
-  refresh: function(s){ return svg(s||18, [path("M23 4v6h-6",{key:'a'}),path("M1 20v-6h6",{key:'b'}),path("M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",{key:'c'})]); },
-  check:   function(s){ return svg(s||15, path("M20 6L9 17l-5-5",{strokeWidth:3})); },
-  checkCi: function(s){ return svg(s||20, [path("M22 11.08V12a10 10 0 1 1-5.93-9.14",{key:'a'}),path("M22 4L12 14.01l-3-3",{key:'b'})]); },
-  circ:    function(s){ return svg(s||20, circle(12,12,10)); },
-  bell:    function(s){ return svg(s||13, [path("M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9",{key:'a'}),path("M13.73 21a2 2 0 0 1-3.46 0",{key:'b'})]); },
-  down:    function(s){ return svg(s||18, path("M6 9l6 6 6-6")); },
-  up:      function(s){ return svg(s||18, path("M18 15l-6-6-6 6")); },
-  x:       function(s){ return svg(s||18, [path("M18 6L6 18",{key:'a'}),path("M6 6l12 12",{key:'b'})]); },
-  copy:    function(s){ return svg(s||15, [path("M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2z",{key:'a'}),path("M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",{key:'b'})]); },
-  clip:    function(s){ return svg(s||18, [path("M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",{key:'a'}),path("M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z",{key:'b'})]); },
-  trend:   function(s){ return svg(s||22, [path("M23 6l-9.5 9.5-5-5L1 18",{key:'a'}),path("M17 6h6v6",{key:'b'})]); },
-  target:  function(s){ return svg(s||22, [path("M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z",{key:'a'}),path("M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z",{key:'b'}),path("M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",{key:'c'})]); },
-  sparkle: function(s){ return svg(s||14, [path("M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z",{key:'a'}),path("M5 17l.8 2.2L8 20l-2.2.8L5 23l-.8-2.2L2 20l2.2-.8L5 17z",{key:'b'}),path("M19 2l.6 1.6 1.6.6-1.6.6L19 6.5l-.6-1.7L16.8 4.2l1.6-.6L19 2z",{key:'c'})]); },
-  save:    function(s){ return svg(s||14, [path("M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z",{key:'a'}),path("M17 21v-8H7v8",{key:'b'}),path("M7 3v5h8",{key:'c'})]); },
+function buildFresh(){
+  return {
+    cats:INITIAL_TASKS.map(function(cat){
+      return {id:cat.id,title:cat.title,remark:'',
+        tasks:cat.tasks.map(function(t){return {id:t.id,text:t.text,completed:false,remark:'',files:[],reporter:'',reportDate:''};})
+
+      };
+    }),
+    members:{}
+  };
+}
+
+function mergeSaved(saved){
+  return {
+    members:saved.members||{},
+    cats:INITIAL_TASKS.map(function(cat){
+      var sc=saved.cats.find(function(c){return c.id===cat.id;});
+      if(!sc) return {id:cat.id,title:cat.title,remark:'',tasks:cat.tasks.map(function(t){return {id:t.id,text:t.text,completed:false,remark:'',files:[],reporter:'',reportDate:''};})};
+      return {id:cat.id,title:cat.title,remark:sc.remark||'',
+        tasks:cat.tasks.map(function(t){
+          var st=sc.tasks.find(function(x){return x.id===t.id;});
+          return st?Object.assign({},st,{text:t.text}):{id:t.id,text:t.text,completed:false,remark:'',files:[],reporter:'',reportDate:''};
+        })
+      };
+    })
+  };
+}
+
+function persist(){
+  if(saveTimer) clearTimeout(saveTimer);
+  badge('saving');
+  saveTimer=setTimeout(async function(){
+    await saveShared(sharedData);
+    badge('saved');
+    setTimeout(function(){badge('idle');},2000);
+  },600);
+}
+
+function badge(state){
+  var b=document.getElementById('save-badge');if(!b)return;
+  if(state==='saving'){b.className='save-badge saving';b.innerHTML=I('loader',13)+' กำลังบันทึก...';}
+  else if(state==='saved'){b.className='save-badge saved';b.innerHTML=I('check',13)+' บันทึกแล้ว';}
+  else{b.className='save-badge idle';b.innerHTML=I('cloud',13)+' ซิงค์อัตโนมัติ';}
+}
+
+function touchMe(){
+  if(!myName)return;
+  if(!sharedData.members)sharedData.members={};
+  sharedData.members[myName]={lastSeen:new Date().toISOString(),color:colorFor(myName)};
+}
+
+// ══════════════════════════════════════════════════════
+//  ICONS
+// ══════════════════════════════════════════════════════
+function I(n,s){
+  s=s||18;
+  var p={
+    drop:'<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>',
+    check:'<path d="M20 6L9 17l-5-5" stroke-width="3"/>',
+    checkCi:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>',
+    circ:'<circle cx="12" cy="12" r="10"/>',
+    up:'<path d="M18 15l-6-6-6 6"/>',
+    down:'<path d="M6 9l6 6 6-6"/>',
+    x:'<path d="M18 6L6 18"/><path d="M6 6l12 12"/>',
+    copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    clip:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>',
+    img:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    upload:'<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
+    file2:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+    user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    trend:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+    alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    cloud:'<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>',
+    loader:'<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>',
+  };
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0">'+(p[n]||'')+'</svg>';
+}
+var CAT_ICONS=['user','user','alert','file2','trend','clip','check'];
+
+// ══════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function today(){var d=new Date();return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
+function timeAgo(iso){
+  if(!iso)return'';
+  var diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(diff<60)return'เมื่อกี้';
+  if(diff<3600)return Math.floor(diff/60)+' นาทีที่แล้ว';
+  if(diff<86400)return Math.floor(diff/3600)+' ชม.ที่แล้ว';
+  return Math.floor(diff/86400)+' วันที่แล้ว';
+}
+function isImg(n){return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(n);}
+function ext(n){return(n.split('.').pop()||'file').toLowerCase();}
+function toDataURL(file,cb){var r=new FileReader();r.onload=function(e){cb(e.target.result);};r.readAsDataURL(file);}
+
+var _toastT=null;
+function toast(title,msg,col){
+  col=col||'#34d399';
+  var old=document.getElementById('_toast');if(old)old.remove();
+  var w=document.createElement('div');w.id='_toast';w.className='toast-wrap';
+  w.innerHTML='<div class="toast"><div class="toast-icon" style="background:'+col+';color:white;border-radius:11px">'+I('checkCi',20)+'</div><div style="flex:1;min-width:0"><div style="font-weight:800;font-size:14px">'+esc(title)+'</div><div style="color:#94a3b8;font-size:12px;margin-top:3px">'+esc(msg)+'</div></div><button style="width:28px;height:28px;border-radius:50%;background:rgba(30,41,59,.8);border:1px solid rgba(100,116,139,.4);color:#94a3b8;display:flex;align-items:center;justify-content:center;cursor:pointer;outline:none" onclick="this.parentElement.parentElement.remove()">'+I('x',13)+'</button></div>';
+  document.body.appendChild(w);
+  if(_toastT)clearTimeout(_toastT);
+  _toastT=setTimeout(function(){if(w.parentNode)w.remove();},3200);
+}
+
+function stats(){
+  var t=0,d=0;
+  sharedData.cats.forEach(function(c){t+=c.tasks.length;d+=c.tasks.filter(function(x){return x.completed;}).length;});
+  return{total:t,done:d,pct:Math.round((d/t)*100)||0,score:((d/t)*MAX_SCORE).toFixed(1)};
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER FULL
+// ══════════════════════════════════════════════════════
+function render(){
+  var st=stats();
+  var members=sharedData.members||{};
+  var names=Object.keys(members);
+  var pending=[],completed=[];
+  sharedData.cats.forEach(function(c){c.tasks.forEach(function(t){
+    (t.completed?completed:pending).push(Object.assign({},t,{catTitle:c.title,catId:c.id}));
+  });});
+
+  // team chips
+  var chips=names.length===0
+    ?'<span style="font-size:12px;color:var(--text3);font-style:italic">ยังไม่มีผู้กรอกข้อมูล</span>'
+    :names.map(function(n){
+        var m=members[n],col=m.color||colorFor(n),isMe=n===myName;
+        return '<div class="team-chip'+(isMe?' me':'')+'" onclick="openTeam()" title="'+esc(n)+'">'+
+          '<div class="team-chip-av" style="background:'+col+'">'+esc(n.charAt(0).toUpperCase())+'</div>'+
+          esc(n)+'<span class="team-chip-time">· '+timeAgo(m.lastSeen)+'</span></div>';
+      }).join('');
+
+  document.getElementById('root').innerHTML=
+  '<header class="header"><div class="header-inner">'+
+    '<div class="logo-wrap"><div class="logo-icon">'+I('drop',22)+'</div>'+
+    '<div><div class="site-title">WSP ละหานทราย</div><div class="site-sub">โครงการจัดการน้ำสะอาด กปภ.สาขาละหานทราย</div></div></div>'+
+    '<div id="save-badge" class="save-badge idle">'+I('cloud',13)+' ซิงค์อัตโนมัติ</div>'+
+  '</div></header>'+
+  '<div style="padding-bottom:80px"><main class="container">'+
+
+  // EMP BANNER
+  '<div class="emp-banner fade-up" style="margin-top:20px">'+
+    '<div class="emp-top-row">'+
+      '<div class="emp-avatar" id="emp-av">'+(myName?esc(myName.charAt(0).toUpperCase()):'?')+'</div>'+
+      '<div class="emp-fields">'+
+        '<div class="emp-label">'+I('user',12)+' ระบุชื่อผู้กรอกข้อมูลของคุณ</div>'+
+        '<div class="emp-row">'+
+          '<input class="emp-input" id="emp-in" type="text" placeholder="ชื่อ-นามสกุล แล้วกด ยืนยัน" value="'+esc(myName)+'" oninput="myName=this.value;var av=document.getElementById(\'emp-av\');if(av)av.textContent=this.value?this.value.charAt(0).toUpperCase():\'?\'" onkeydown="if(event.key===\'Enter\')confirmEmp()" />'+
+          '<button class="btn-confirm" onclick="confirmEmp()">ยืนยัน</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    // TEAM BAR
+    '<div class="team-bar">'+
+      '<div class="team-bar-label">'+I('users',13)+' ทีมงานทั้งหมด ('+names.length+' คน)'+
+        '<button class="btn-team" onclick="openTeam()" style="margin-left:auto">'+I('users',13)+' ดูรายชื่อและสถิติ</button>'+
+      '</div>'+
+      '<div class="team-avatars">'+chips+'</div>'+
+    '</div>'+
+  '</div>'+
+
+  // DASHBOARD
+  '<div class="dashboard fade-up">'+
+    '<div class="db-glow1"></div><div class="db-glow2"></div>'+
+    '<div class="db-content">'+
+      '<div class="db-top">'+
+        '<div><div class="db-label">'+I('star',14)+' ความก้าวหน้าโครงการ</div><div class="db-pct">'+st.pct+'%</div></div>'+
+        '<div class="db-right">'+
+          '<div class="db-count">'+st.done+' / '+st.total+' งาน</div>'+
+          '<button class="btn-report" onclick="openSummary()">'+I('clip',16)+' <span>ดูสรุปรายงาน</span></button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="progress-track"><div class="progress-fill" style="width:'+st.pct+'%"></div></div>'+
+      '<div class="db-score">'+I('target',16)+'<span style="color:#c7d2fe">คะแนนคาดการณ์</span><span class="score-num">'+st.score+'</span><span style="color:#6b7280;font-size:11px"> / '+MAX_SCORE+'</span></div>'+
+    '</div>'+
+  '</div>'+
+
+  '<div id="cat-list">'+renderCats()+'</div>'+
+  '</main></div>'+
+  (showSummary?renderSummary(st,pending,completed):'')+
+  (showTeam?renderTeamModal(members):'')+
+  '';
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER CATEGORIES
+// ══════════════════════════════════════════════════════
+function renderCats(){
+  return sharedData.cats.map(function(cat,idx){
+    var done=cat.tasks.filter(function(t){return t.completed;}).length;
+    var pct=Math.round((done/cat.tasks.length)*100);
+    var isExp=expanded.includes(cat.id);
+    var allDone=done===cat.tasks.length;
+    var ik=CAT_ICONS[idx]||'trend';
+    var ibg=allDone?'linear-gradient(135deg,#34d399,#059669)':isExp?'linear-gradient(135deg,#4f46e5,#3b82f6)':'linear-gradient(135deg,#e2e8f0,#f1f5f9)';
+    var ic2=allDone||isExp?'white':'#94a3b8';
+    var fc=allDone?'linear-gradient(to right,#34d399,#10b981)':'linear-gradient(to right,#22d3ee,#4f46e5)';
+    return '<div class="cat-card'+(allDone?' done':(isExp?' expanded':''))+'">'+
+      '<div class="cat-header" onclick="toggleCat('+cat.id+')">'+
+        '<div class="cat-icon-wrap" style="background:'+ibg+';color:'+ic2+'">'+I(ik,18)+'</div>'+
+        '<div class="cat-info">'+
+          '<div class="cat-title" style="color:'+(allDone?'#065f46':isExp?'#312e81':'var(--text)')+'">'+esc(cat.title)+'</div>'+
+          '<div class="cat-progress-row">'+
+            '<div class="mini-track"><div class="mini-fill" style="background:'+fc+';width:'+pct+'%"></div></div>'+
+            '<span class="cat-count">'+done+'/'+cat.tasks.length+'</span>'+
+            '<span class="cat-pct" style="color:'+(allDone?'var(--green)':'var(--indigo)')+';background:'+(allDone?'var(--green-light)':'var(--indigo-light)')+'">'+pct+'%</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="chevron" style="background:'+(isExp?'var(--indigo-light)':'var(--bg)')+'">'+I(isExp?'up':'down',18)+'</div>'+
+      '</div>'+
+      '<div class="accordion-body" style="max-height:'+(isExp?'5000px':'0')+';opacity:'+(isExp?1:0)+'">'+
+        (!allDone?'<div class="cat-remark-box"><div class="remark-label">'+I('alert',13)+' ปัญหา/หมายเหตุภาพรวมหมวดหมู่</div><textarea class="remark-textarea" rows="2" placeholder="ระบุสาเหตุที่ยังดำเนินการไม่ครบถ้วน..." oninput="setCatRemark('+cat.id+',this.value)">'+esc(cat.remark||'')+'</textarea></div>':'')+
+        '<div class="task-list">'+cat.tasks.map(function(t){return renderTask(cat.id,t);}).join('')+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER TASK
+// ══════════════════════════════════════════════════════
+function renderTask(catId,task){
+  var hf=task.files&&task.files.length>0;
+  var bb=task.completed?'#f1f5f9':'linear-gradient(to bottom,#eef2ff,#e0e7ff)';
+  var bc=task.completed?'#94a3b8':'#4f46e5';
+
+  // thumbs strip (shown in edit mode and completed)
+  function makeThumbs(deletable){
+    if(!hf)return'';
+    var h='<div class="file-previews">';
+    task.files.forEach(function(f,fi){
+      if(f.isImage){
+        h+='<div class="file-thumb"><img src="'+f.data+'" alt="'+esc(f.name)+'">'+
+          (deletable?'<button class="remove-file-btn" onclick="rmFile(event,'+catId+',\''+esc(task.id)+'\','+fi+')">✕</button>':'')+
+        '</div>';
+      }else{
+        h+='<div class="file-thumb-doc"><div class="file-ext-badge">'+esc(ext(f.name).toUpperCase())+'</div><div class="file-name-sm">'+esc(f.name)+'</div>'+
+          (deletable?'<button style="margin-top:3px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:4px;font-size:9px;font-weight:700;padding:1px 5px;cursor:pointer;outline:none" onclick="rmFile(event,'+catId+',\''+esc(task.id)+'\','+fi+')">ลบ</button>':'')+
+        '</div>';
+      }
+    });
+    return h+'</div>';
+  }
+
+  var meta='';
+  if(task.completed){
+    meta='<div class="completed-meta">';
+    if(task.reporter){var col=colorFor(task.reporter);meta+='<div class="meta-tag" style="background:'+col+'18;color:'+col+';border-color:'+col+'44"><div style="width:18px;height:18px;border-radius:50%;background:'+col+';color:white;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;flex-shrink:0">'+esc(task.reporter.charAt(0).toUpperCase())+'</div>'+esc(task.reporter)+'</div>';}
+    if(task.reportDate)meta+='<div class="meta-tag">'+I('calendar',11)+' '+esc(task.reportDate)+'</div>';
+    if(hf)meta+='<div class="evidence-tag" onclick="openFV(event,'+catId+',\''+task.id+'\')">'+I('img',12)+' หลักฐาน '+task.files.length+' ไฟล์ – ดู</div>';
+    meta+='</div>';
+  }
+
+  return '<div class="task-item'+(task.completed?' completed-task':'')+'">'+
+    '<div class="task-top" onclick="toggleTask('+catId+',\''+task.id+'\')">'+
+      '<button class="check-btn'+(task.completed?' checked':'')+'" tabindex="-1">'+I('check',14)+'</button>'+
+      '<div class="task-text'+(task.completed?' done':'')+'">'+
+        '<span class="task-badge" style="background:'+bb+';color:'+bc+';border:1px solid '+(task.completed?'#e2e8f0':'#c7d2fe')+'">'+esc(task.id)+'</span>'+esc(task.text)+
+      '</div>'+
+      (hf&&task.completed?'<div class="evidence-tag" style="margin-left:4px;flex-shrink:0" onclick="openFV(event,'+catId+',\''+task.id+'\')">'+I('img',11)+' '+task.files.length+'</div>':'<div style="flex-shrink:0"></div>')+
+    '</div>'+
+    meta+
+    (task.completed?makeThumbs(false):'')+
+    (!task.completed?
+      '<div class="task-actions">'+
+        '<input class="task-remark-input" type="text" placeholder="หมายเหตุย่อย..." value="'+esc(task.remark||'')+'" oninput="setTaskRemark('+catId+',\''+task.id+'\',this.value)" onclick="event.stopPropagation()" />'+
+        '<div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">'+
+          '<div class="upload-section" onclick="event.stopPropagation()">'+
+            '<input type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" multiple capture="environment" onchange="addFiles(event,'+catId+',\''+task.id+'\')" />'+
+            '<div class="upload-label">'+I('upload',15)+'<span>ถ่ายภาพ / เลือกไฟล์หลักฐาน</span>'+(hf?'<span style="margin-left:auto;background:var(--indigo);color:white;padding:2px 7px;border-radius:5px;font-size:10px;flex-shrink:0">'+task.files.length+'</span>':'')+
+            '</div><div class="upload-hint">กล้อง · PNG · JPG · PDF · Word · Excel (≤10MB)</div>'+
+          '</div>'+
+          '<button class="view-files-btn'+(hf?'':' no-files')+'" onclick="'+(hf?'openFV(event,'+catId+',\''+task.id+'\')':'event.stopPropagation()')+'" title="'+(hf?'ดูไฟล์ที่อัปโหลด':'ยังไม่มีไฟล์')+'">'+
+            I('img',15)+' ดูไฟล์'+(hf?'<span style="background:rgba(255,255,255,.25);border-radius:5px;padding:1px 6px;font-size:10px;margin-left:2px">'+task.files.length+'</span>':'')+
+          '</button>'+
+        '</div>'+
+        makeThumbs(true)+
+      '</div>'
+    :'')+
+  '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER TEAM MODAL
+// ══════════════════════════════════════════════════════
+function renderTeamModal(members){
+  var names=Object.keys(members);
+  var cats=sharedData.cats;
+
+  var body=names.length===0
+    ?'<div class="empty-state">ยังไม่มีผู้กรอกข้อมูล<br><small style="color:var(--text3);font-size:12px">ระบุชื่อในช่องด้านบนแล้วกด ยืนยัน</small></div>'
+    :names.map(function(name){
+        var m=members[name],col=m.color||colorFor(name),isMe=name===myName;
+        var done=[];
+        cats.forEach(function(c){c.tasks.forEach(function(t){if(t.completed&&t.reporter===name)done.push(t.id);});});
+        return '<div class="member-card">'+
+          '<div class="member-av-lg" style="background:'+col+'">'+esc(name.charAt(0).toUpperCase())+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">'+
+              '<div style="font-size:14px;font-weight:800;color:var(--text)">'+esc(name)+'</div>'+
+              (isMe?'<span style="font-size:10px;font-weight:700;background:var(--indigo-light);color:var(--indigo);padding:2px 8px;border-radius:6px;border:1px solid #c7d2fe">คุณ</span>':'')+
+            '</div>'+
+            '<div style="font-size:11px;color:var(--text3);font-weight:600;display:flex;align-items:center;gap:4px;margin-bottom:8px">'+I('calendar',11)+' ใช้งานล่าสุด: '+timeAgo(m.lastSeen)+'</div>'+
+            (done.length>0
+              ?'<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center"><span style="font-size:11px;font-weight:700;color:var(--text3)">บันทึกงาน ('+done.length+'):</span>'+done.map(function(id){return '<span class="member-task-tag">'+esc(id)+'</span>';}).join('')+'</div>'
+              :'<div style="font-size:12px;color:var(--text3)">ยังไม่ได้บันทึกงาน</div>')+
+          '</div>'+
+        '</div>';
+      }).join('');
+
+  return '<div class="overlay" onclick="if(event.target===this)closeTeam()">'+
+    '<div class="team-modal">'+
+      '<div class="modal-hdr">'+
+        '<div>'+
+          '<div style="font-weight:900;font-size:16px;display:flex;align-items:center;gap:8px;color:var(--text)">'+I('users',18)+' ทีมงานผู้กรอกข้อมูล</div>'+
+          '<div style="font-size:12px;color:var(--text3);font-weight:600;margin-top:2px">'+names.length+' คน · ข้อมูลใช้ร่วมกันทุกคน</div>'+
+        '</div>'+
+        '<button class="modal-close" onclick="closeTeam()">'+I('x',18)+'</button>'+
+      '</div>'+
+      '<div class="modal-body-scroll">'+body+'</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER SUMMARY MODAL
+// ══════════════════════════════════════════════════════
+function renderSummary(st,pending,completed){
+  function prow(t){
+    return '<div class="modal-task-item">'+
+      '<div style="color:#cbd5e1;display:flex;flex-shrink:0;margin-top:2px">'+I('circ',20)+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--indigo);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.catTitle)+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:#334155;line-height:1.5">'+esc(t.id)+' '+esc(t.text)+'</div>'+
+      (t.remark?'<div style="margin-top:5px;padding:5px 10px;background:var(--amber-light);border-radius:7px;font-size:11px;color:#92400e;border:1px solid #fde68a">'+esc(t.remark)+'</div>':'')+
+      '</div><button class="copy-btn" onclick="doCopy(\'[ค้าง] '+esc(t.id+' '+t.text)+'\')" title="คัดลอก">'+I('copy',14)+'</button></div>';
+  }
+  function crow(t){
+    var col=t.reporter?colorFor(t.reporter):'#059669';
+    return '<div class="modal-task-item done-item">'+
+      '<div style="color:var(--green);display:flex;flex-shrink:0;margin-top:2px">'+I('checkCi',20)+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.catTitle)+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:#334155;line-height:1.5">'+esc(t.id)+' '+esc(t.text)+'</div>'+
+      ((t.reporter||t.reportDate||(t.files&&t.files.length))?
+        '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">'+
+          (t.reporter?'<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:6px;border:1px solid '+col+'44;background:'+col+'12;color:'+col+';display:inline-flex;align-items:center;gap:5px">'+
+            '<span style="width:14px;height:14px;border-radius:50%;background:'+col+';color:white;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;flex-shrink:0">'+esc(t.reporter.charAt(0).toUpperCase())+'</span>'+esc(t.reporter)+'</span>':'')+
+          (t.reportDate?'<span style="font-size:10px;padding:2px 9px;border-radius:6px;border:1px solid #a7f3d0;background:var(--green-light);color:#065f46;font-weight:600">'+esc(t.reportDate)+'</span>':'')+
+          (t.files&&t.files.length?'<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;display:inline-flex;align-items:center;gap:4px">'+I('img',11)+' '+t.files.length+' ไฟล์</span>':'')+
+        '</div>'
+      :'')+
+      '</div><button class="copy-btn" onclick="doCopy(\'[เสร็จ] '+esc(t.id+' '+t.text)+'\')" title="คัดลอก">'+I('copy',14)+'</button></div>';
+  }
+
+  return '<div class="modal-overlay-bottom" onclick="if(event.target===this)closeSummary()">'+
+    '<div class="modal-sheet">'+
+      '<div class="modal-hdr">'+
+        '<div style="display:flex;align-items:center;gap:13px">'+
+          '<div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;padding:9px 11px;border-radius:14px">'+I('clip',18)+'</div>'+
+          '<div><div style="font-weight:900;font-size:16px;color:var(--text)">สรุปรายงานสถานะ WSP</div>'+
+          '<div style="font-size:12px;color:var(--indigo);font-weight:700">รายการดำเนินการแล้วและยังค้างอยู่</div></div>'+
+        '</div>'+
+        '<button class="modal-close" onclick="closeSummary()">'+I('x',18)+'</button>'+
+      '</div>'+
+      '<div class="modal-body-full">'+
+        '<div class="stat-cards">'+
+          '<div class="stat-card"><div style="padding:10px 12px;border-radius:14px;display:flex;background:var(--indigo-light);color:var(--indigo)">'+I('target',22)+'</div><div style="font-size:11px;color:var(--text3);font-weight:700">คะแนนคาดการณ์</div><div style="font-size:26px;font-weight:900;letter-spacing:-1px;font-family:\'IBM Plex Mono\',monospace;color:var(--indigo)">'+st.score+' / '+MAX_SCORE+'</div></div>'+
+          '<div class="stat-card"><div style="padding:10px 12px;border-radius:14px;display:flex;background:var(--green-light);color:var(--green)">'+I('trend',22)+'</div><div style="font-size:11px;color:var(--text3);font-weight:700">ความก้าวหน้า</div><div style="font-size:26px;font-weight:900;letter-spacing:-1px;font-family:\'IBM Plex Mono\',monospace;color:var(--green)">'+st.pct+'%</div></div>'+
+        '</div>'+
+        '<div class="section-head"><div class="section-stripe" style="background:linear-gradient(to bottom,#fb923c,#ef4444)"></div><div class="section-title">งานที่ยังไม่ดำเนินการ <span class="section-badge" style="color:#ea580c;background:#fff7ed">'+pending.length+'</span></div></div>'+
+        (pending.length===0?'<div class="empty-state">🎉 ดำเนินการครบทุกหัวข้อแล้ว!</div>':pending.map(prow).join(''))+
+        '<div style="height:20px"></div>'+
+        '<div class="section-head"><div class="section-stripe" style="background:linear-gradient(to bottom,#34d399,#10b981)"></div><div class="section-title">งานที่ดำเนินการแล้ว <span class="section-badge" style="color:var(--green);background:var(--green-light)">'+completed.length+'</span></div></div>'+
+        (completed.length===0?'<div class="empty-state">ยังไม่มีงานที่เสร็จ</div>':completed.map(crow).join(''))+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════════════════
+window.confirmEmp=function(){
+  var v=(document.getElementById('emp-in')||{}).value||'';
+  if(!v.trim()){toast('⚠️ กรุณาระบุชื่อ','พิมพ์ชื่อ-นามสกุลก่อนกดยืนยัน','#f97316');return;}
+  myName=v.trim();
+  try{sessionStorage.setItem(SESSION_KEY,myName);}catch(e){}
+  touchMe(); persist(); render();
+  toast('👋 ยินดีต้อนรับ',myName+' เข้าสู่ระบบแล้ว');
 };
 
-var CAT_ICONS = ['users','users','alert','bar','activity','file','refresh'];
+window.toggleCat=function(id){
+  var i=expanded.indexOf(id);if(i>-1)expanded.splice(i,1);else expanded.push(id);
+  var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+};
 
-// ── Storage ───────────────────────────────────────────────────────────────────
-function loadState() {
-  try { var r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
-}
-function saveState(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-function mergeWithInitial(saved) {
-  return INITIAL_DATA.map(function(cat) {
-    var sc = saved.find(function(s){ return s.id === cat.id; });
-    if (!sc) return Object.assign({}, cat, {remark:''});
-    return Object.assign({}, cat, {
-      remark: sc.remark || '',
-      tasks: cat.tasks.map(function(task) {
-        var st = sc.tasks.find(function(t){ return t.id === task.id; });
-        return st ? Object.assign({}, task, {completed: st.completed, remark: st.remark||''}) : Object.assign({}, task, {remark:''});
-      })
-    });
+window.toggleTask=function(catId,taskId){
+  if(!myName){toast('⚠️ กรุณาระบุชื่อก่อน','พิมพ์ชื่อแล้วกด "ยืนยัน" ก่อนกรอกข้อมูล','#f97316');return;}
+  sharedData.cats=sharedData.cats.map(function(c){
+    if(c.id!==catId)return c;
+    return Object.assign({},c,{tasks:c.tasks.map(function(t){
+      if(t.id!==taskId)return t;
+      var next=!t.completed;
+      var nt=Object.assign({},t,{completed:next});
+      if(next){nt.reporter=myName;nt.reportDate=today();setTimeout(function(){toast('✅ บันทึกแล้ว','"'+(t.text.length>38?t.text.slice(0,38)+'…':t.text)+'" เสร็จสิ้น');},30);}
+      return nt;
+    })});
   });
-}
+  touchMe();persist();
+  var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+};
 
-// ── App ───────────────────────────────────────────────────────────────────────
-function App() {
-  var saved = loadState();
-  var initCats = saved ? mergeWithInitial(saved) : INITIAL_DATA.map(function(c){ return Object.assign({},c,{remark:''}); });
+window.setCatRemark=function(id,v){
+  sharedData.cats=sharedData.cats.map(function(c){return c.id===id?Object.assign({},c,{remark:v}):c;});
+  touchMe();persist();
+};
 
-  var catsState = useState(initCats);
-  var cats = catsState[0]; var setCats = catsState[1];
+window.setTaskRemark=function(catId,taskId,v){
+  sharedData.cats=sharedData.cats.map(function(c){
+    if(c.id!==catId)return c;
+    return Object.assign({},c,{tasks:c.tasks.map(function(t){return t.id===taskId?Object.assign({},t,{remark:v}):t;})});
+  });
+  touchMe();persist();
+};
 
-  var expandedState = useState([1]);
-  var expanded = expandedState[0]; var setExpanded = expandedState[1];
-
-  var toastState = useState(null);
-  var toast = toastState[0]; var setToast = toastState[1];
-
-  var modalState = useState(false);
-  var modal = modalState[0]; var setModal = modalState[1];
-
-  var saveAnimState = useState(false);
-  var saveAnim = saveAnimState[0]; var setSaveAnim = saveAnimState[1];
-
-  var toastRef = useRef(null);
-
-  useEffect(function() {
-    saveState(cats);
-    setSaveAnim(true);
-    var t = setTimeout(function(){ setSaveAnim(false); }, 1400);
-    return function(){ clearTimeout(t); };
-  }, [cats]);
-
-  var total = cats.reduce(function(s,c){ return s + c.tasks.length; }, 0);
-  var done  = cats.reduce(function(s,c){ return s + c.tasks.filter(function(t){ return t.completed; }).length; }, 0);
-  var pct   = Math.round((done/total)*100) || 0;
-  var score = ((done/total)*MAX_SCORE).toFixed(1);
-
-  function showToast(title, msg) {
-    if (toastRef.current) clearTimeout(toastRef.current);
-    setToast({title:title, msg:msg});
-    toastRef.current = setTimeout(function(){ setToast(null); }, 3200);
-  }
-
-  function toggleCat(id) {
-    setExpanded(function(p){ return p.includes(id) ? p.filter(function(i){ return i!==id; }) : p.concat([id]); });
-  }
-
-  function toggleTask(catId, taskId) {
-    setCats(function(prev) {
-      return prev.map(function(c) {
-        if (c.id !== catId) return c;
-        return Object.assign({}, c, {
-          tasks: c.tasks.map(function(t) {
-            if (t.id !== taskId) return t;
-            var next = !t.completed;
-            if (next) {
-              var short = t.text.length > 45 ? t.text.slice(0,45)+'…' : t.text;
-              setTimeout(function(){ showToast('✅ บันทึกแล้ว', '"'+short+'" เสร็จแล้ว'); }, 30);
-            }
-            return Object.assign({}, t, {completed: next});
-          })
-        });
-      });
+window.addFiles=function(event,catId,taskId){
+  event.stopPropagation();
+  var files=event.target.files;if(!files||!files.length)return;
+  var nf=[],arr=Array.prototype.slice.call(files),left=arr.length;
+  arr.forEach(function(file){
+    if(file.size>10*1024*1024){toast('⚠️ ไฟล์ใหญ่เกิน','ไม่เกิน 10MB ต่อไฟล์','#f97316');left--;if(!left)done2();return;}
+    toDataURL(file,function(d){nf.push({name:file.name,data:d,isImage:isImg(file.name),size:file.size});left--;if(!left)done2();});
+  });
+  function done2(){
+    sharedData.cats=sharedData.cats.map(function(c){
+      if(c.id!==catId)return c;
+      return Object.assign({},c,{tasks:c.tasks.map(function(t){return t.id===taskId?Object.assign({},t,{files:(t.files||[]).concat(nf)}):t;})});
     });
+    touchMe();persist();
+    var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+    toast('📎 เพิ่มไฟล์แล้ว','อัปโหลด '+nf.length+' ไฟล์สำเร็จ');
   }
+};
 
-  function setCatRemark(id, v) {
-    setCats(function(p){ return p.map(function(c){ return c.id===id ? Object.assign({},c,{remark:v}) : c; }); });
-  }
+window.rmFile=function(event,catId,taskId,fi){
+  event.stopPropagation();
+  sharedData.cats=sharedData.cats.map(function(c){
+    if(c.id!==catId)return c;
+    return Object.assign({},c,{tasks:c.tasks.map(function(t){return t.id===taskId?Object.assign({},t,{files:(t.files||[]).filter(function(_,i){return i!==fi;})}):t;})});
+  });
+  touchMe();persist();
+  var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+};
 
-  function setTaskRemark(cid, tid, v) {
-    setCats(function(p){ return p.map(function(c){
-      if (c.id !== cid) return c;
-      return Object.assign({}, c, {tasks: c.tasks.map(function(t){ return t.id===tid ? Object.assign({},t,{remark:v}) : t; })});
-    }); });
-  }
+window.openFV=function(event,catId,taskId){
+  event.stopPropagation();
+  var cat=sharedData.cats.find(function(c){return c.id===catId;});if(!cat)return;
+  var task=cat.tasks.find(function(t){return t.id===taskId;});if(!task||!task.files||!task.files.length)return;
+  var old=document.getElementById('_fv');if(old)old.remove();
+  var fh=task.files.map(function(f,fi){
+    var e2=ext(f.name).toUpperCase();
+    var body=f.isImage?'<img class="fv-img" src="'+f.data+'" alt="'+esc(f.name)+'">'
+      :'<div class="fv-doc-body"><div style="font-size:42px">📄</div><div style="font-size:14px;font-weight:700;color:#e2e8f0;margin:8px 0;word-break:break-all">'+esc(f.name)+'</div>'+(f.size?'<div style="font-size:11px;color:#64748b">'+Math.round(f.size/1024)+' KB</div>':'')+'<a href="'+f.data+'" download="'+esc(f.name)+'" style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:9px 18px;background:var(--indigo);color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">'+I('upload',14)+' ดาวน์โหลด</a></div>';
+    return '<div class="fv-item"><div class="fv-item-header"><div class="fv-item-name">'+esc(f.name)+'</div><div style="display:flex;align-items:center;gap:8px"><span class="fv-item-ext">'+esc(e2)+'</span><button class="fv-delete-btn" onclick="fvDel('+catId+',\''+esc(taskId)+'\','+fi+')">'+I('x',12)+' ลบ</button></div></div>'+body+'</div>';
+  }).join('');
+  var div=document.createElement('div');div.id='_fv';div.className='fv-overlay';
+  div.innerHTML='<div class="fv-header"><div><div class="fv-title">'+I('img',18)+' ไฟล์หลักฐาน – '+esc(task.id)+'</div><div class="fv-sub">'+esc(task.text.length>55?task.text.slice(0,55)+'…':task.text)+'</div></div><button class="fv-close" onclick="document.getElementById(\'_fv\').remove()">'+I('x',18)+'</button></div><div class="fv-main">'+fh+'</div>';
+  div.addEventListener('click',function(e){if(e.target===div)div.remove();});
+  document.body.appendChild(div);
+};
 
-  function doCopy(txt) {
-    var ta = document.createElement('textarea');
-    ta.value = txt; document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showToast('📋 คัดลอกแล้ว','ข้อความถูกคัดลอกลงคลิปบอร์ดแล้ว'); } catch(e) {}
-    document.body.removeChild(ta);
-  }
+window.fvDel=function(catId,taskId,fi){
+  if(!confirm('ลบไฟล์นี้?'))return;
+  sharedData.cats=sharedData.cats.map(function(c){
+    if(c.id!==catId)return c;
+    return Object.assign({},c,{tasks:c.tasks.map(function(t){return t.id===taskId?Object.assign({},t,{files:(t.files||[]).filter(function(_,i){return i!==fi;})}):t;})});
+  });
+  touchMe();persist();
+  var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+  var task=null;sharedData.cats.forEach(function(c){c.tasks.forEach(function(t){if(c.id===catId&&t.id===taskId)task=t;});});
+  if(task&&task.files&&task.files.length)openFV({stopPropagation:function(){}},catId,taskId);
+  else{var fv=document.getElementById('_fv');if(fv)fv.remove();}
+  toast('🗑️ ลบไฟล์แล้ว','');
+};
 
-  var pending   = cats.reduce(function(a,c){ return a.concat(c.tasks.filter(function(t){ return !t.completed; }).map(function(t){ return Object.assign({},t,{catTitle:c.title}); })); }, []);
-  var completed = cats.reduce(function(a,c){ return a.concat(c.tasks.filter(function(t){ return t.completed; }).map(function(t){ return Object.assign({},t,{catTitle:c.title}); })); }, []);
+window.openSummary=function(){showSummary=true;render();};
+window.closeSummary=function(){showSummary=false;render();};
+window.openTeam=function(){showTeam=true;render();};
+window.closeTeam=function(){showTeam=false;render();};
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-  return h('div', {style:{minHeight:'100vh',background:'#f1f5f9',paddingBottom:80}},
+window.doCopy=function(txt){
+  var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');toast('📋 คัดลอกแล้ว','');}catch(e){}
+  document.body.removeChild(ta);
+};
 
-    // HEADER
-    h('header', {style:{position:'sticky',top:0,zIndex:30,background:'rgba(255,255,255,0.88)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(226,232,240,0.8)',boxShadow:'0 4px 24px rgba(0,0,0,0.05)'}},
-      h('div', {style:{maxWidth:720,margin:'0 auto',padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between'}},
-        h('div', {style:{display:'flex',alignItems:'center',gap:12}},
-          h('div', {style:{position:'relative'}},
-            h('div', {style:{position:'absolute',inset:-2,borderRadius:14,background:'rgba(56,189,248,0.4)',filter:'blur(8px)'}}),
-            h('div', {style:{position:'relative',background:'linear-gradient(135deg,#38bdf8,#3b82f6,#6366f1)',padding:'8px 10px',borderRadius:14,color:'white',border:'1px solid rgba(96,165,250,0.5)',boxShadow:'inset 0 2px 4px rgba(255,255,255,0.4),0 4px 12px rgba(59,130,246,0.5)'}},
-              ICONS.droplet(22)
-            )
-          ),
-          h('div', null,
-            h('h1', {style:{fontSize:20,fontWeight:900,letterSpacing:'-0.5px',background:'linear-gradient(135deg,#312e81,#3b82f6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}, 'WSP ละหานทราย'),
-            h('p',  {style:{fontSize:12,color:'#64748b',fontWeight:600}}, 'โครงการจัดการน้ำสะอาด กปภ.สาขาละหานทราย')
-          )
-        ),
-        h('div', {style:{display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:700,padding:'6px 12px',borderRadius:10,background:saveAnim?'#f0fdf4':'#f8fafc',border:'1px solid '+(saveAnim?'#86efac':'#e2e8f0'),color:saveAnim?'#16a34a':'#94a3b8',transition:'all .3s'}},
-          h('span', {className: saveAnim?'save-pulse':'', style:{display:'flex'}}, ICONS.save(14)),
-          saveAnim ? 'บันทึกแล้ว' : 'อัตโนมัติ'
-        )
-      )
-    ),
-
-    h('main', {style:{maxWidth:720,margin:'0 auto',padding:'24px 16px 0'}},
-
-      // DASHBOARD
-      h('section', {style:{position:'relative',background:'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%)',borderRadius:28,padding:'24px 28px',marginBottom:28,boxShadow:'0 20px 50px -10px rgba(49,46,129,0.7)',overflow:'hidden',border:'1px solid rgba(99,102,241,0.3)'}},
-        h('div', {style:{position:'absolute',top:-30,right:-30,width:180,height:180,borderRadius:'50%',background:'rgba(99,102,241,0.35)',filter:'blur(50px)',pointerEvents:'none'}}),
-        h('div', {style:{position:'absolute',bottom:-30,left:-30,width:140,height:140,borderRadius:'50%',background:'rgba(6,182,212,0.25)',filter:'blur(40px)',pointerEvents:'none'}}),
-        h('div', {style:{position:'relative',zIndex:1}},
-          h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:16}},
-            h('div', null,
-              h('p', {style:{color:'#a5b4fc',fontSize:13,fontWeight:600,marginBottom:6,display:'flex',alignItems:'center',gap:6}}, [ICONS.sparkle(14), ' ความก้าวหน้าโครงการ']),
-              h('span', {style:{fontSize:60,fontWeight:900,color:'white',letterSpacing:'-3px',lineHeight:1,textShadow:'0 2px 20px rgba(255,255,255,0.2)'}}, pct+'%')
-            ),
-            h('div', {style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:10}},
-              h('span', {style:{background:'rgba(255,255,255,0.1)',backdropFilter:'blur(10px)',color:'#e0e7ff',fontSize:12,fontWeight:700,padding:'6px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)'}}, done+' / '+total+' งาน'),
-              h('button', {
-                onClick: function(){ setModal(true); },
-                style:{display:'flex',alignItems:'center',gap:7,background:'linear-gradient(to bottom,#818cf8,#6366f1)',color:'white',fontSize:13,fontWeight:700,padding:'9px 18px',borderRadius:12,border:'none',cursor:'pointer',boxShadow:'0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)',transition:'all .12s',outline:'none'},
-                onMouseDown: function(e){e.currentTarget.style.boxShadow='0 0 0 #4338ca';e.currentTarget.style.transform='translateY(5px)';},
-                onMouseUp:   function(e){e.currentTarget.style.boxShadow='0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)';e.currentTarget.style.transform='translateY(0)';},
-                onMouseLeave:function(e){e.currentTarget.style.boxShadow='0 5px 0 #4338ca,0 10px 20px rgba(99,102,241,0.4)';e.currentTarget.style.transform='translateY(0)';}
-              }, [ICONS.clip(16), ' ดูสรุปรายงาน'])
-            )
-          ),
-          h('div', {style:{width:'100%',height:14,borderRadius:99,background:'rgba(15,23,42,0.6)',border:'1px solid rgba(255,255,255,0.08)',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.5)',overflow:'hidden'}},
-            h('div', {style:{height:'100%',borderRadius:99,background:'linear-gradient(90deg,#22d3ee,#3b82f6,#8b5cf6)',boxShadow:'0 0 20px rgba(56,189,248,0.7)',width:pct+'%',position:'relative',transition:'width .9s cubic-bezier(.22,1,.36,1)'}},
-              h('div', {style:{position:'absolute',top:0,left:0,right:0,height:'50%',background:'linear-gradient(to bottom,rgba(255,255,255,0.4),transparent)',borderRadius:99}})
-            )
-          ),
-          h('div', {style:{marginTop:14}},
-            h('div', {style:{display:'inline-flex',alignItems:'center',gap:7,background:'rgba(255,255,255,0.07)',borderRadius:10,padding:'6px 14px',border:'1px solid rgba(255,255,255,0.1)',color:'white'}},
-              ICONS.target(16),
-              h('span', {style:{color:'#c7d2fe',fontSize:12,fontWeight:700}}, 'คะแนนคาดการณ์ : '),
-              h('span', {style:{color:'#818cf8',fontSize:16,fontWeight:900}}, score),
-              h('span', {style:{color:'#6b7280',fontSize:11}}, ' / '+MAX_SCORE)
-            )
-          )
-        )
-      ),
-
-      // CATEGORIES
-      h('section', {style:{display:'flex',flexDirection:'column',gap:16}},
-        cats.map(function(cat, idx) {
-          var catDone = cat.tasks.filter(function(t){ return t.completed; }).length;
-          var catPct  = Math.round((catDone/cat.tasks.length)*100);
-          var isExp   = expanded.includes(cat.id);
-          var allDone = catDone === cat.tasks.length;
-          var iconKey = CAT_ICONS[idx] || 'activity';
-          var CatIcon = ICONS[iconKey];
-
-          return h('div', {key:cat.id, className:'fade-in', style:{
-            borderRadius:24, overflow:'hidden',
-            border: allDone?'1px solid #a7f3d0':isExp?'1px solid #c7d2fe':'1px solid #e2e8f0',
-            background: allDone?'linear-gradient(to right,#f0fdf4,white)':'white',
-            boxShadow: allDone?'0 8px 24px -8px rgba(16,185,129,0.2)':isExp?'0 12px 30px -10px rgba(79,70,229,0.15)':'0 2px 8px rgba(0,0,0,0.04)',
-            transition:'all .3s'
-          }},
-            // category header
-            h('div', {onClick:function(){ toggleCat(cat.id); }, style:{padding:'16px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none',background:isExp&&!allDone?'linear-gradient(to right,rgba(238,242,255,0.7),transparent)':'transparent',transition:'background .3s'}},
-              h('div', {style:{display:'flex',alignItems:'center',gap:14,flex:1}},
-                h('div', {style:{padding:'10px 12px',borderRadius:16,transition:'all .4s',boxShadow:'inset 0 2px 3px rgba(255,255,255,0.6)',border:allDone?'1px solid #6ee7b7':isExp?'1px solid #818cf8':'1px solid white',background:allDone?'linear-gradient(135deg,#34d399,#10b981)':isExp?'linear-gradient(135deg,#6366f1,#3b82f6)':'linear-gradient(135deg,#f1f5f9,#e2e8f0)',color:allDone||isExp?'white':'#94a3b8'}},
-                  CatIcon(18)
-                ),
-                h('div', {style:{flex:1,paddingRight:8}},
-                  h('h3', {style:{fontWeight:700,fontSize:14,lineHeight:1.4,marginBottom:8,color:allDone?'#065f46':isExp?'#312e81':'#334155'}}, cat.title),
-                  h('div', {style:{display:'flex',alignItems:'center',gap:10}},
-                    h('div', {style:{width:130,height:7,borderRadius:99,background:'rgba(148,163,184,0.2)',overflow:'hidden',boxShadow:'inset 0 1px 2px rgba(0,0,0,0.08)'}},
-                      h('div', {style:{height:'100%',borderRadius:99,background:allDone?'linear-gradient(to right,#34d399,#10b981)':'linear-gradient(to right,#22d3ee,#6366f1)',width:catPct+'%',transition:'width .7s cubic-bezier(.22,1,.36,1)',position:'relative'}},
-                        h('div', {style:{position:'absolute',top:0,left:0,right:0,height:'50%',background:'rgba(255,255,255,0.3)',borderRadius:99}})
-                      )
-                    ),
-                    h('span', {style:{fontSize:11,fontWeight:700,color:'#64748b',background:'#f1f5f9',padding:'2px 8px',borderRadius:6}}, catDone+'/'+cat.tasks.length),
-                    h('span', {style:{fontSize:11,fontWeight:800,color:allDone?'#059669':'#6366f1',background:allDone?'#d1fae5':'#eef2ff',padding:'2px 8px',borderRadius:6}}, catPct+'%')
-                  )
-                )
-              ),
-              h('div', {style:{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:isExp?'#eef2ff':'#f8fafc',color:isExp?'#6366f1':'#94a3b8',border:'1px solid white',transition:'all .25s',flexShrink:0,boxShadow:isExp?'inset 0 2px 4px rgba(0,0,0,0.05)':'none'}},
-                isExp ? ICONS.up(18) : ICONS.down(18)
-              )
-            ),
-
-            // accordion content
-            h('div', {className:'accordion', style:{maxHeight:isExp?4000:0, opacity:isExp?1:0}},
-              h('div', {style:{padding:'4px 16px 20px'}},
-                !allDone && h('div', {style:{marginBottom:16,padding:14,background:'linear-gradient(to br,#fff7ed,rgba(255,251,235,0.3))',border:'1px solid rgba(253,186,116,0.5)',borderRadius:16,boxShadow:'inset 0 1px 0 rgba(255,255,255,1)'}},
-                  h('label', {style:{fontSize:13,fontWeight:700,color:'#c2410c',marginBottom:8,display:'flex',alignItems:'center',gap:6}},
-                    [ICONS.alert(14), ' ปัญหา/หมายเหตุ (ภาพรวมหมวดหมู่)']
-                  ),
-                  h('textarea', {rows:2, value:cat.remark||'',
-                    onChange:function(e){ setCatRemark(cat.id, e.target.value); },
-                    placeholder:'ระบุสาเหตุที่หมวดหมู่นี้ยังดำเนินการไม่ครบถ้วน...',
-                    style:{width:'100%',padding:'10px 14px',fontSize:13,border:'1px solid #fed7aa',borderRadius:12,background:'white',outline:'none',resize:'none',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.02)',color:'#1e293b'},
-                    onFocus:function(e){e.target.style.borderColor='#fb923c';e.target.style.boxShadow='0 0 0 3px rgba(251,146,60,0.15)';},
-                    onBlur: function(e){e.target.style.borderColor='#fed7aa';e.target.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.02)';}
-                  })
-                ),
-                h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
-                  cat.tasks.map(function(task) {
-                    return h('div', {key:task.id, style:{padding:'14px 16px',borderRadius:18,transition:'all .3s',border:task.completed?'1px solid #a7f3d0':'1px solid #e2e8f0',background:task.completed?'rgba(240,253,244,0.7)':'white',boxShadow:task.completed?'inset 0 1px 0 rgba(255,255,255,0.8)':'0 2px 8px rgba(0,0,0,0.02)'}},
-                      h('div', {onClick:function(){ toggleTask(cat.id, task.id); }, style:{display:'flex',alignItems:'flex-start',gap:14,cursor:'pointer'}},
-                        h('button', {style:{flexShrink:0,width:30,height:30,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',background:task.completed?'linear-gradient(135deg,#34d399,#10b981)':'linear-gradient(135deg,#f8fafc,#e2e8f0)',border:task.completed?'1px solid #6ee7b7':'1px solid #cbd5e1',boxShadow:task.completed?'inset 0 2px 4px rgba(255,255,255,0.5),0 0 15px rgba(16,185,129,0.4)':'inset 0 2px 5px rgba(0,0,0,0.08)',color:task.completed?'white':'transparent',cursor:'pointer',outline:'none',transition:'all .3s'}},
-                          ICONS.check(15)
-                        ),
-                        h('div', {style:{flex:1}},
-                          h('p', {style:{fontSize:14,lineHeight:1.6,color:task.completed?'#94a3b8':'#1e293b',fontWeight:task.completed?500:700,textDecoration:task.completed?'line-through':'none',transition:'all .2s'}},
-                            [h('span', {key:'badge', style:{display:'inline-block',padding:'1px 7px',borderRadius:6,fontSize:11,fontWeight:900,marginRight:8,verticalAlign:'middle',background:task.completed?'#f1f5f9':'linear-gradient(to bottom,#eef2ff,#e0e7ff)',color:task.completed?'#94a3b8':'#4f46e5',border:task.completed?'1px solid #e2e8f0':'1px solid #c7d2fe',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.5)'}}, task.id),
-                             task.text]
-                          ),
-                          !task.completed && h('div', {onClick:function(e){e.stopPropagation();}, style:{marginTop:12,display:'flex',gap:10,flexWrap:'wrap',alignItems:'center'}},
-                            h('div', {style:{flex:1,minWidth:150,position:'relative'}},
-                              h('div', {style:{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:'#94a3b8',pointerEvents:'none',display:'flex'}}, ICONS.file(14)),
-                              h('input', {type:'text', value:task.remark||'',
-                                onChange:function(e){ setTaskRemark(cat.id, task.id, e.target.value); },
-                                placeholder:'เพิ่มหมายเหตุย่อย...',
-                                style:{width:'100%',paddingLeft:36,paddingRight:14,paddingTop:9,paddingBottom:9,fontSize:13,border:'1px solid #e2e8f0',borderRadius:12,background:'#f8fafc',outline:'none',color:'#1e293b',boxShadow:'inset 0 2px 4px rgba(0,0,0,0.02)',transition:'all .2s'},
-                                onFocus:function(e){e.target.style.borderColor='#818cf8';e.target.style.background='white';e.target.style.boxShadow='0 0 0 3px rgba(129,140,248,0.15)';},
-                                onBlur: function(e){e.target.style.borderColor='#e2e8f0';e.target.style.background='#f8fafc';e.target.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.02)';}
-                              })
-                            ),
-                            h('button', {
-                              onClick:function(e){
-                                e.stopPropagation();
-                                var short = task.text.length>40 ? task.text.slice(0,40)+'…' : task.text;
-                                showToast('🔔 แจ้งเตือนแล้ว', 'ส่งเร่งรัดงาน "'+short+'" เรียบร้อย');
-                              },
-                              style:{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',fontSize:12,fontWeight:700,cursor:'pointer',background:'linear-gradient(to bottom,#fbbf24,#f97316)',color:'white',border:'none',borderRadius:12,flexShrink:0,boxShadow:'0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)',transition:'all .12s',outline:'none'},
-                              onMouseDown: function(e){e.currentTarget.style.boxShadow='0 0 0 #c2410c';e.currentTarget.style.transform='translateY(4px)';},
-                              onMouseUp:   function(e){e.currentTarget.style.boxShadow='0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)';e.currentTarget.style.transform='translateY(0)';},
-                              onMouseLeave:function(e){e.currentTarget.style.boxShadow='0 4px 0 #c2410c,0 8px 15px rgba(245,158,11,0.35)';e.currentTarget.style.transform='translateY(0)';}
-                            }, [ICONS.bell(13), ' เร่งรัดงาน'])
-                          )
-                        )
-                      )
-                    );
-                  })
-                )
-              )
-            )
-          );
-        })
-      )
-    ),
-
-    // TOAST
-    toast && h('div', {style:{position:'fixed',bottom:24,left:0,right:0,zIndex:70,display:'flex',justifyContent:'center',padding:'0 16px',pointerEvents:'none'}, className:'slide-up'},
-      h('div', {style:{background:'rgba(15,23,42,0.92)',backdropFilter:'blur(20px)',color:'white',padding:'14px 20px',borderRadius:20,display:'flex',alignItems:'center',gap:14,maxWidth:440,width:'100%',border:'1px solid rgba(100,116,139,0.4)',boxShadow:'0 20px 50px rgba(0,0,0,0.5)',pointerEvents:'auto'}},
-        h('div', {style:{background:'linear-gradient(135deg,#34d399,#10b981)',color:'white',padding:'8px 10px',borderRadius:12,flexShrink:0,boxShadow:'0 0 15px rgba(16,185,129,0.5)'}}, ICONS.checkCi(20)),
-        h('div', {style:{flex:1,minWidth:0}},
-          h('p', {style:{fontWeight:800,fontSize:14}}, toast.title),
-          h('p', {style:{color:'#94a3b8',fontSize:12,marginTop:3}}, toast.msg)
-        ),
-        h('button', {onClick:function(){ setToast(null); }, style:{width:30,height:30,borderRadius:'50%',background:'rgba(30,41,59,0.8)',border:'1px solid rgba(100,116,139,0.4)',color:'#94a3b8',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,outline:'none'}},
-          ICONS.x(14)
-        )
-      )
-    ),
-
-    // MODAL
-    modal && h('div', {
-      className:'fade-in',
-      style:{position:'fixed',inset:0,zIndex:60,background:'rgba(15,23,42,0.65)',backdropFilter:'blur(12px)',display:'flex',alignItems:'flex-end',justifyContent:'center'},
-      onClick:function(e){ if(e.target===e.currentTarget) setModal(false); }
-    },
-      h('div', {className:'slide-up', style:{background:'#f8fafc',width:'100%',maxWidth:700,height:'88vh',borderRadius:'24px 24px 0 0',boxShadow:'0 -20px 60px rgba(0,0,0,0.4)',display:'flex',flexDirection:'column',overflow:'hidden',border:'1px solid rgba(255,255,255,0.2)'}},
-        // modal header
-        h('div', {style:{background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',borderBottom:'1px solid #e2e8f0',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}},
-          h('div', {style:{display:'flex',alignItems:'center',gap:14}},
-            h('div', {style:{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'white',padding:'9px 11px',borderRadius:16,boxShadow:'0 4px 10px rgba(99,102,241,0.4)',border:'1px solid #818cf8'}}, ICONS.clip(18)),
-            h('div', null,
-              h('h3', {style:{fontWeight:900,color:'#1e293b',fontSize:17}}, 'สรุปรายงานสถานะ WSP'),
-              h('p',  {style:{fontSize:12,color:'#6366f1',fontWeight:700}}, 'แยกตามรายการที่ทำแล้วและยังไม่ทำ')
-            )
-          ),
-          h('button', {onClick:function(){ setModal(false); }, style:{width:38,height:38,borderRadius:'50%',background:'#f1f5f9',border:'none',color:'#64748b',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',outline:'none'}},
-            ICONS.x(18)
-          )
-        ),
-        // modal body
-        h('div', {style:{flex:1,overflowY:'auto',padding:'20px'}},
-          // score cards
-          h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:24}},
-            h('div', {style:{background:'white',padding:'20px 16px',borderRadius:24,border:'1px solid #e2e8f0',boxShadow:'0 4px 16px rgba(0,0,0,0.03)',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center'}},
-              h('div', {style:{background:'#eef2ff',padding:'10px 12px',borderRadius:16,color:'#6366f1',marginBottom:10}}, ICONS.target(22)),
-              h('p', {style:{fontSize:11,color:'#64748b',fontWeight:700,marginBottom:4}}, 'คะแนนคาดการณ์'),
-              h('p', {style:{fontSize:26,fontWeight:900,color:'#6366f1',letterSpacing:'-1px'}}, score+' / '+MAX_SCORE)
-            ),
-            h('div', {style:{background:'white',padding:'20px 16px',borderRadius:24,border:'1px solid #e2e8f0',boxShadow:'0 4px 16px rgba(0,0,0,0.03)',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center'}},
-              h('div', {style:{background:'#f0fdf4',padding:'10px 12px',borderRadius:16,color:'#16a34a',marginBottom:10}}, ICONS.trend(22)),
-              h('p', {style:{fontSize:11,color:'#64748b',fontWeight:700,marginBottom:4}}, 'ความก้าวหน้า'),
-              h('p', {style:{fontSize:26,fontWeight:900,color:'#16a34a',letterSpacing:'-1px'}}, pct+'%')
-            )
-          ),
-
-          // pending list
-          h('div', {style:{marginBottom:24}},
-            h('div', {style:{display:'flex',alignItems:'center',gap:10,marginBottom:14,paddingLeft:4}},
-              h('div', {style:{width:10,height:28,background:'linear-gradient(to bottom,#fb923c,#ef4444)',borderRadius:99,boxShadow:'0 0 10px rgba(249,115,22,0.5)'}}),
-              h('h4', {style:{fontWeight:900,fontSize:16,color:'#1e293b'}},
-                ['งานที่ยังไม่ดำเนินการ ', h('span', {key:'c', style:{color:'#ea580c',background:'#fff7ed',padding:'2px 10px',borderRadius:8,fontSize:13,marginLeft:4,fontWeight:800}}, pending.length)]
-              )
-            ),
-            h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
-              pending.length === 0
-                ? h('div', {style:{background:'white',padding:'28px 20px',borderRadius:24,border:'1px solid #e2e8f0',textAlign:'center'}},
-                    h('p', {style:{fontWeight:800,color:'#1e293b',fontSize:16}}, 'ไม่มีงานค้าง 🎉'),
-                    h('p', {style:{color:'#64748b',fontSize:13,marginTop:4}}, 'ดำเนินการครบทุกหัวข้อแล้ว')
-                  )
-                : pending.map(function(t) {
-                    return h('div', {key:t.id, style:{background:'white',padding:'14px 16px',borderRadius:18,border:'1px solid #e2e8f0',display:'flex',alignItems:'flex-start',gap:12,boxShadow:'0 2px 10px rgba(0,0,0,0.03)'}},
-                      h('div', {style:{color:'#cbd5e1',marginTop:2,display:'flex'}}, ICONS.circ(20)),
-                      h('div', {style:{flex:1,minWidth:0}},
-                        h('p', {style:{fontSize:11,fontWeight:700,color:'#6366f1',marginBottom:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, t.catTitle),
-                        h('p', {style:{fontSize:13,fontWeight:700,color:'#334155',lineHeight:1.5}}, t.id+' '+t.text),
-                        t.remark && h('div', {style:{marginTop:8,padding:'8px 12px',background:'linear-gradient(to right,#fff7ed,#fffbeb)',borderRadius:10,border:'1px solid rgba(253,186,116,0.5)',display:'flex',gap:7,alignItems:'flex-start'}},
-                          h('div', {style:{display:'flex',color:'#f97316',flexShrink:0,marginTop:1}}, ICONS.alert(14)),
-                          h('span', {style:{fontSize:12,color:'#9a3412',fontWeight:500}}, t.remark)
-                        )
-                      ),
-                      h('button', {
-                        onClick:function(){ doCopy('[ยังไม่ดำเนินการ] '+t.catTitle+'\nงาน: '+t.id+' '+t.text+(t.remark?'\nหมายเหตุ: '+t.remark:'')); },
-                        style:{flexShrink:0,padding:'8px 10px',borderRadius:10,background:'white',border:'1px solid #e2e8f0',color:'#94a3b8',cursor:'pointer',display:'flex',transition:'all .2s',outline:'none'},
-                        onMouseEnter:function(e){e.currentTarget.style.background='#6366f1';e.currentTarget.style.color='white';},
-                        onMouseLeave:function(e){e.currentTarget.style.background='white';e.currentTarget.style.color='#94a3b8';}
-                      }, ICONS.copy(15))
-                    );
-                  })
-            )
-          ),
-
-          // completed list
-          h('div', null,
-            h('div', {style:{display:'flex',alignItems:'center',gap:10,marginBottom:14,paddingLeft:4}},
-              h('div', {style:{width:10,height:28,background:'linear-gradient(to bottom,#34d399,#10b981)',borderRadius:99,boxShadow:'0 0 10px rgba(16,185,129,0.5)'}}),
-              h('h4', {style:{fontWeight:900,fontSize:16,color:'#1e293b'}},
-                ['งานที่ดำเนินการแล้ว ', h('span', {key:'c', style:{color:'#16a34a',background:'#f0fdf4',padding:'2px 10px',borderRadius:8,fontSize:13,marginLeft:4,fontWeight:800}}, completed.length)]
-              )
-            ),
-            h('div', {style:{display:'flex',flexDirection:'column',gap:10}},
-              completed.length === 0
-                ? h('div', {style:{background:'white',padding:'20px',borderRadius:20,border:'1px solid #e2e8f0',textAlign:'center',color:'#94a3b8',fontWeight:600,fontSize:14}}, 'ยังไม่มีงานที่ดำเนินการเสร็จ')
-                : completed.map(function(t) {
-                    return h('div', {key:t.id, style:{background:'linear-gradient(to right,rgba(240,253,244,0.6),white)',padding:'14px 16px',borderRadius:18,border:'1px solid #a7f3d0',display:'flex',alignItems:'flex-start',gap:12}},
-                      h('div', {style:{color:'#10b981',marginTop:2,display:'flex'}}, ICONS.checkCi(20)),
-                      h('div', {style:{flex:1,minWidth:0}},
-                        h('p', {style:{fontSize:11,fontWeight:700,color:'#059669',marginBottom:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}, t.catTitle),
-                        h('p', {style:{fontSize:13,fontWeight:700,color:'#334155',lineHeight:1.5}}, t.id+' '+t.text)
-                      ),
-                      h('button', {
-                        onClick:function(){ doCopy('[ดำเนินการแล้ว]\nงาน: '+t.id+' '+t.text); },
-                        style:{flexShrink:0,padding:'8px 10px',borderRadius:10,background:'white',border:'1px solid #d1fae5',color:'#6ee7b7',cursor:'pointer',display:'flex',transition:'all .2s',outline:'none'},
-                        onMouseEnter:function(e){e.currentTarget.style.background='#10b981';e.currentTarget.style.color='white';},
-                        onMouseLeave:function(e){e.currentTarget.style.background='white';e.currentTarget.style.color='#6ee7b7';}
-                      }, ICONS.copy(15))
-                    );
-                  })
-            )
-          )
-        )
-      )
-    )
-  );
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+// ══════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════
+(async function(){
+  try{var s=sessionStorage.getItem(SESSION_KEY);if(s)myName=s;}catch(e){}
+  var saved=await loadShared();
+  sharedData=saved?mergeSaved(saved):buildFresh();
+  if(myName){touchMe();await saveShared(sharedData);}
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('root').style.display='';
+  render();
+  // Poll every 30s for updates from other users
+  setInterval(async function(){
+    var fresh=await loadShared();
+    if(!fresh)return;
+    sharedData=mergeSaved(fresh);
+    if(myName)touchMe();
+    var el=document.getElementById('cat-list');if(el)el.innerHTML=renderCats();
+    // refresh header team bar
+    var tb=document.querySelector('.team-bar');
+    if(tb){
+      var members=sharedData.members||{};
+      var names=Object.keys(members);
+      var chips=names.length===0?'<span style="font-size:12px;color:var(--text3);font-style:italic">ยังไม่มีผู้กรอกข้อมูล</span>':names.map(function(n){var m=members[n],col=m.color||colorFor(n),isMe=n===myName;return '<div class="team-chip'+(isMe?' me':'')+'" onclick="openTeam()" title="'+esc(n)+'"><div class="team-chip-av" style="background:'+col+'">'+esc(n.charAt(0).toUpperCase())+'</div>'+esc(n)+'<span class="team-chip-time">· '+timeAgo(m.lastSeen)+'</span></div>';}).join('');
+      var av=tb.querySelector('.team-avatars');if(av)av.innerHTML=chips;
+      var lbl=tb.querySelector('.team-bar-label');if(lbl)lbl.innerHTML=I('users',13)+' ทีมงานทั้งหมด ('+names.length+' คน)<button class="btn-team" onclick="openTeam()" style="margin-left:auto">'+I('users',13)+' ดูรายชื่อและสถิติ</button>';
+    }
+  },30000);
+})();
 </script>
 </body>
 </html>
